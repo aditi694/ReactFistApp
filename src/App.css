@@ -1,0 +1,25 @@
+.container {
+  width: 350px;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+input, select, textarea {
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+button {
+  margin: 10px 5px 0 0;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.error {
+  color: #8e2727;
+  font-size: 14px;
+}
