@@ -1,16 +1,21 @@
+import { TextField } from "@mui/material";
+
 const InputField = ({ name, formik, type = "text", ...props }) => {
     return (
-        <div>
-            <input
-                type={type}
-                {...formik.getFieldProps(name)}
-                {...props}
-            />
+        <TextField
+            fullWidth
+            margin="normal"
+            type={type}
+            {...props}
 
-            {formik.touched[name] && formik.errors[name] && (
-                <div className="error">{formik.errors[name]}</div>
-            )}
-        </div>
+            name={name}
+            value={formik.values[name]}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+
+            error={formik.touched[name] && Boolean(formik.errors[name])}
+            helperText={formik.touched[name] && formik.errors[name]}
+        />
     );
 };
 

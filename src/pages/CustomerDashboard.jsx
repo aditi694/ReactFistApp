@@ -1,9 +1,26 @@
 import { useEffect, useState } from "react";
 import { getCustomerDashboard } from "../api/customerApi";
+import {
+    Container,
+    Card,
+    CardContent,
+    Typography,
+    Box,
+    Divider,
+    Button
+} from "@mui/material";
+import { logoutUser } from "../utils/auth.js";
+import { useNavigate } from "react-router-dom";
 
 const CustomerDashboard = () => {
 
     const [data, setData] = useState(null);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logoutUser();
+        navigate("/customer-login");
+    };
 
     useEffect(() => {
         fetchDashboard();
@@ -18,56 +35,186 @@ const CustomerDashboard = () => {
         }
     };
 
-    if (!data) return <h3>Loading...</h3>;
+    if (!data) {
+        return (
+            <Container sx={{ mt: 4 }}>
+                <Typography>Loading...</Typography>
+            </Container>
+        );
+    }
 
     return (
-        <div>
-            <h2>Customer Dashboard</h2>
+        <Container maxWidth="md" sx={{ mt: 4 }}>
 
-            <h3>{data.customerName}</h3>
+            {/* HEADER FIXED */}
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2
+                }}
+            >
+                <Typography variant="h4">
+                    Customer Dashboard
+                </Typography>
 
-            <p>Account Number: {data.accountNumber}</p>
-            <p>Account Type: {data.accountType}</p>
-            <p>Balance: ₹{data.balance}</p>
+                <Button
+                    variant="outlined"
+                    onClick={handleLogout}
+                >
+                    Logout
+                </Button>
+            </Box>
 
-            <h4>Bank Branch</h4>
-            <p>{data.bankBranch.bankName}</p>
-            <p>{data.bankBranch.branchName}</p>
-            <p>{data.bankBranch.city}</p>
+            <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+                <CardContent>
 
-            <h4>Debit Card</h4>
-            <p>{data.debitCard.cardNumber}</p>
-            <p>Limit: ₹{data.debitCard.dailyLimit}</p>
+                    {/* CUSTOMER NAME */}
+                    <Typography variant="h5" gutterBottom>
+                        {data.customerName}
+                    </Typography>
 
-            <h4>Credit Card</h4>
-            <p>{data.creditCard.cardNumber}</p>
-            <p>Available: ₹{data.creditCard.availableCredit}</p>
+                    <Divider sx={{ my: 2 }} />
 
-            <h4>Loans</h4>
-            {data.loans.map((loan) => (
-                <div key={loan.loanId}>
-                    <p>{loan.loanType} - ₹{loan.loanAmount}</p>
-                </div>
-            ))}
+                    {/* ACCOUNT DETAILS */}
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="h6">Account Details</Typography>
+                        <Typography>
+                            Account Number: {data.accountNumber}
+                        </Typography>
+                        <Typography>
+                            Account Type: {data.accountType}
+                        </Typography>
+                        <Typography sx={{ fontWeight: "bold" }}>
+                            Balance: ₹{data.balance}
+                        </Typography>
+                    </Box>
 
-            <h4>Insurances</h4>
-            {data.insurances.map((ins) => (
-                <div key={ins.policyNumber}>
-                    <p>{ins.insuranceType} - ₹{ins.coverageAmount}</p>
-                </div>
-            ))}
+                    <Divider />
 
-            <h4>Nominee</h4>
-            <p>{data.nominee.name} ({data.nominee.relation})</p>
+                    {/* BANK BRANCH */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">Bank Branch</Typography>
+                        <Typography>{data.bankBranch?.bankName}</Typography>
+                        <Typography>{data.bankBranch?.branchName}</Typography>
+                        <Typography>{data.bankBranch?.city}</Typography>
+                    </Box>
 
-            <h4>KYC</h4>
-            <p>{data.kyc.status}</p>
+                    <Divider />
 
-            <h4>Limits</h4>
-            <p>Daily: ₹{data.limits.dailyTransactionLimit}</p>
-            <p>Per Txn: ₹{data.limits.perTransactionLimit}</p>
+                    {/* DEBIT CARD */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">Debit Card</Typography>
+                        <Typography>{data.debitCard?.cardNumber}</Typography>
+                        <Typography>
+                            Limit: ₹{data.debitCard?.dailyLimit}
+                        </Typography>
+                    </Box>
 
-        </div>
+                    <Divider />
+
+                    {/* CREDIT CARD */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">Credit Card</Typography>
+
+                        {data.creditCard?.status === "NOT_APPLIED" ? (
+                            <Typography sx={{ color: "gray" }}>
+                                {data.creditCard?.message}
+                            </Typography>
+                        ) : (
+                            <>
+                                <Typography>{data.creditCard?.cardNumber}</Typography>
+                                <Typography>
+                                    Available: ₹{data.creditCard?.availableCredit}
+                                </Typography>
+                            </>
+                        )}
+                    </Box>
+
+                    <Divider />
+
+                    {/* LOANS */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">Loans</Typography>
+                        {data.loans?.length === 0 ? (
+                            <Typography sx={{ color: "gray" }}>
+                                No active loans
+                            </Typography>
+                        ) : (
+                            data.loans.map((loan) => (
+                                <Typography key={loan.loanId}>
+                                    {loan.loanType} - ₹{loan.loanAmount}
+                                </Typography>
+                            ))
+                        )}
+                    </Box>
+
+                    <Divider />
+
+                    {/* INSURANCE */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">Insurances</Typography>
+                        {data.insurances?.length === 0 ? (
+                            <Typography sx={{ color: "gray" }}>
+                                No active insurances
+                            </Typography>
+                        ) : (
+                            data.insurances.map((ins) => (
+                                <Typography key={ins.policyNumber}>
+                                    {ins.insuranceType} - ₹{ins.coverageAmount}
+                                </Typography>
+                            ))
+                        )}
+                    </Box>
+
+                    <Divider />
+
+                    {/* NOMINEE */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">Nominee</Typography>
+                        <Typography>
+                            {data.nominee?.name} ({data.nominee?.relation})
+                        </Typography>
+                    </Box>
+
+                    <Divider />
+
+                    {/* KYC */}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant="h6">KYC Status</Typography>
+                        <Typography
+                            sx={{
+                                color:
+                                    data.kyc?.status === "APPROVED"
+                                        ? "green"
+                                        : "orange",
+                                fontWeight: "bold"
+                            }}
+                        >
+                            {data.kyc?.status}
+                        </Typography>
+                    </Box>
+
+                    <Divider />
+
+                    {/* LIMITS */}
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="h6">
+                            Transaction Limits
+                        </Typography>
+                        <Typography>
+                            Daily: ₹{data.limits?.dailyTransactionLimit}
+                        </Typography>
+                        <Typography>
+                            Per Txn: ₹{data.limits?.perTransactionLimit}
+                        </Typography>
+                    </Box>
+
+                </CardContent>
+            </Card>
+
+        </Container>
     );
 };
 

@@ -1,20 +1,27 @@
+import { TextField, MenuItem } from "@mui/material";
+
 const SelectField = ({ name, formik, options, placeholder }) => {
     return (
-        <div>
-            <select {...formik.getFieldProps(name)}>
-                <option value="">{placeholder}</option>
+        <TextField
+            select
+            fullWidth
+            margin="normal"
+            label={placeholder}
 
-                {options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                    </option>
-                ))}
-            </select>
+            name={name}
+            value={formik.values[name]}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
 
-            {formik.touched[name] && formik.errors[name] && (
-                <div className="error">{formik.errors[name]}</div>
-            )}
-        </div>
+            error={formik.touched[name] && Boolean(formik.errors[name])}
+            helperText={formik.touched[name] && formik.errors[name]}
+        >
+            {options.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                </MenuItem>
+            ))}
+        </TextField>
     );
 };
 

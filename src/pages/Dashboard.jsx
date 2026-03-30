@@ -7,6 +7,14 @@ import {
     unblockCustomer
 } from "../api/adminApi";
 import { logoutUser } from "../utils/auth";
+import {
+    Card,
+    Box,
+    CardContent,
+    CardActions,
+    Typography,
+    Button
+} from "@mui/material";
 
 const Dashboard = () => {
 
@@ -81,75 +89,108 @@ const Dashboard = () => {
 
     return (
         <div>
-            <h2>Admin Dashboard</h2>
-
-            <button onClick={handleLogout}>Logout</button>
+            <Box
+                sx={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 2
+                }}>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        position: "absolute",
+                        left: "50%",
+                        transform: "translateX(-50%)"
+                    }}>
+                    Admin Dashboard
+                </Typography>
+                <Button
+                    sx={{ ml: "auto" }}
+                    variant="outlined"
+                    onClick={handleLogout}
+                >
+                    Logout
+                </Button>
+            </Box>
 
             <h3>Customers List</h3>
 
             {customers.length === 0 && <p>No customers found</p>}
 
             {customers.map((c) => (
-                <div
-                    key={c.customerId}
-                    style={{
-                        border: "1px solid gray",
-                        marginBottom: "10px",
-                        padding: "10px"
-                    }}
-                >
+                <Card key={c.customerId} sx={{ mb: 2, p: 1 }}>
 
-                    <p><b>Name:</b> {c.fullName}</p>
-                    <p><b>Email:</b> {c.email}</p>
-                    <p><b>Phone:</b> {c.phone}</p>
+                    <CardContent>
+                        <Typography variant="h6">{c.fullName}</Typography>
 
-                    <p>
-                        <b>Status:</b>
-                        <span style={{ color: c.status === "ACTIVE" ? "green" : "red" }}>
-                            {" "}{c.status}
-                        </span>
-                    </p>
+                        <Typography>Email: {c.email}</Typography>
+                        <Typography>Phone: {c.phone}</Typography>
 
-                    <p>
-                        <b>KYC:</b>
-                        <span style={{ color: c.kycStatus === "APPROVED" ? "green" : "orange" }}>
-                            {" "}{c.kycStatus}
-                        </span>
-                    </p>
+                        <Typography>
+                            Status:
+                            <span style={{ color: c.status === "ACTIVE" ? "green" : "red" }}>
+          {" "}{c.status}
+        </span>
+                        </Typography>
 
-                    <p>
-                        <b>Created:</b> {new Date(c.createdAt).toLocaleString()}
-                    </p>
+                        <Typography>
+                            KYC:
+                            <span style={{ color: c.kycStatus === "APPROVED" ? "green" : "orange" }}>
+          {" "}{c.kycStatus}
+        </span>
+                        </Typography>
 
-                    <div style={{ marginTop: "10px" }}>
+                        <Typography>
+                            Created: {new Date(c.createdAt).toLocaleString()}
+                        </Typography>
+                    </CardContent>
+
+                    <CardActions>
 
                         {c.kycStatus === "PENDING" && (
                             <>
-                                <button onClick={() => handleApproveKyc(c.customerId)}>
-                                    Approve KYC
-                                </button>
+                                <Button
+                                    variant="contained"
+                                    color="success"
+                                    onClick={() => handleApproveKyc(c.customerId)}
+                                >
+                                    Approve
+                                </Button>
 
-                                <button onClick={() => handleRejectKyc(c.customerId)}>
-                                    Reject KYC
-                                </button>
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    onClick={() => handleRejectKyc(c.customerId)}
+                                >
+                                    Reject
+                                </Button>
                             </>
                         )}
 
                         {c.status === "ACTIVE" && (
-                            <button onClick={() => handleBlock(c.customerId)}>
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                onClick={() => handleBlock(c.customerId)}
+                            >
                                 Block
-                            </button>
+                            </Button>
                         )}
 
                         {c.status === "BLOCKED" && (
-                            <button onClick={() => handleUnblock(c.customerId)}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handleUnblock(c.customerId)}
+                            >
                                 Unblock
-                            </button>
+                            </Button>
                         )}
 
-                    </div>
+                    </CardActions>
 
-                </div>
+                </Card>
             ))}
         </div>
     );

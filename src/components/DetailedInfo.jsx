@@ -1,23 +1,31 @@
 import InputField from "./fields/InputField";
 import SelectField from "./fields/SelectField";
 import { BANK_OPTIONS, ACCOUNT_TYPES } from "../constants/formOptions";
+import { Button, Typography, Box } from "@mui/material";
 
 const DetailedInfo = ({ formik, prevStep }) => {
     const fields = [
-        { name: "aadhaar", placeholder: "Aadhaar" },
-        { name: "pan", placeholder: "PAN" },
-        { name: "preferredCity", placeholder: "City" },
-        { name: "preferredBranchName", placeholder: "Branch" },
-        { name: "password", type: "password", placeholder: "Password" },
-        { name: "confirmPassword", type: "password", placeholder: "Confirm Password" },
+        { name: "aadhaar", label: "Aadhaar Number" },
+        { name: "pan", label: "PAN Number" },
+        { name: "preferredCity", label: "City" },
+        { name: "preferredBranchName", label: "Branch" },
+        { name: "password", type: "password", label: "Password" },
+        { name: "confirmPassword", type: "password", label: "Confirm Password" },
     ];
 
     return (
-        <div>
-            <h3>Detailed Information</h3>
+        <Box>
+
+            <Typography variant="h5" gutterBottom>
+                Detailed Information
+            </Typography>
 
             {fields.map((field) => (
-                <InputField key={field.name} formik={formik} {...field} />
+                <InputField
+                    key={field.name}
+                    formik={formik}
+                    {...field}
+                />
             ))}
 
             <SelectField
@@ -31,15 +39,28 @@ const DetailedInfo = ({ formik, prevStep }) => {
                 name="accountType"
                 formik={formik}
                 options={ACCOUNT_TYPES}
-                placeholder="Select Account Type"
+                placeholder="Account Type"
             />
 
-            <button type="button" onClick={prevStep}>
-                Back
-            </button>
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={prevStep}
+                >
+                    Back
+                </Button>
 
-            <button type="submit">Submit</button>
-        </div>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    type="submit"
+                >
+                    Submit
+                </Button>
+            </Box>
+
+        </Box>
     );
 };
 

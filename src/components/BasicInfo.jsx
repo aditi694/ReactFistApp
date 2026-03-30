@@ -1,43 +1,68 @@
 import InputField from "./fields/InputField";
 import SelectField from "./fields/SelectField";
 import { GENDER_OPTIONS } from "../constants/formOptions";
+import { TextField, Button, Typography, Box } from "@mui/material";
 
 const BasicInfo = ({ formik, nextStep }) => {
     const fields = [
-        { name: "name", placeholder: "Name" },
-        { name: "email", placeholder: "Email" },
-        { name: "phone", placeholder: "Phone" },
-        { name: "dob", type: "date" },
+        { name: "name", label: "Full Name" },
+        { name: "email", label: "Email" },
+        { name: "phone", label: "Phone" },
+        { name: "dob", type: "date", label: "Date of Birth" },
     ];
 
     return (
-        <div>
-            <h3>Basic Information</h3>
+        <Box>
+
+            <Typography variant="h5" gutterBottom>
+                Basic Information
+            </Typography>
 
             {fields.map((field) => (
-                <InputField key={field.name} formik={formik} {...field} />
+                <InputField
+                    key={field.name}
+                    formik={formik}
+                    {...field}
+                    InputLabelProps={
+                        field.type === "date" ? { shrink: true } : {}
+                    }
+                />
             ))}
 
             <SelectField
                 name="gender"
                 formik={formik}
                 options={GENDER_OPTIONS}
-                placeholder="Select Gender"
+                placeholder="Gender"
             />
 
-            <textarea
-                {...formik.getFieldProps("address")}
-                placeholder="Address"
+            {/* ADDRESS FIELD (UPDATED) */}
+            <TextField
+                fullWidth
+                multiline
+                rows={3}
+                margin="normal"
+                label="Address"
+
+                name="address"
+                value={formik.values.address}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+
+                error={formik.touched.address && Boolean(formik.errors.address)}
+                helperText={formik.touched.address && formik.errors.address}
             />
 
-            {formik.touched.address && formik.errors.address && (
-                <div className="error">{formik.errors.address}</div>
-            )}
-
-            <button type="button" onClick={nextStep}>
+            <Button
+                fullWidth
+                variant="contained"
+                sx={{ mt: 2 }}
+                onClick={nextStep}
+            >
                 Next
-            </button>
-        </div>
+            </Button>
+
+        </Box>
     );
 };
 
