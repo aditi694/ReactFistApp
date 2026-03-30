@@ -43,8 +43,4 @@ const DetailedInfo = ({ formik, prevStep }) => {
     );
 };
 
-
-
-
-
 export default DetailedInfo;

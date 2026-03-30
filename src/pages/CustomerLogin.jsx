@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminLogin } from "../api/authApi";
+import { customerLogin } from "../api/authApi";
 import { setToken } from "../utils/auth";
 
-const Login = () => {
-    const [form, setForm] = useState({ username: "", password: "" });
+const CustomerLogin = () => {
+    const [form, setForm] = useState({ accountNumber: "", password: "" });
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
@@ -20,10 +20,10 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const res = await adminLogin(form.username, form.password);
+            const res = await customerLogin(form.accountNumber, form.password);
             const token = res.data.token;
             setToken(token);
-            navigate("/dashboard");
+            navigate("/customer-dashboard");
         } catch (err) {
             setError("Invalid credentials");
         }
@@ -31,12 +31,12 @@ const Login = () => {
 
     return (
         <div>
-            <h2>Admin Login</h2>
+            <h2>Customer Login</h2>
 
             {error && <p>{error}</p>}
 
             <form onSubmit={handleLogin}>
-                <input name="username" placeholder="Username" onChange={handleChange} />
+                <input name="accountNumber" placeholder="Account Number" onChange={handleChange} />
                 <input type="password" name="password" placeholder="Password" onChange={handleChange} />
                 <button type="submit">Login</button>
             </form>
@@ -44,4 +44,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default CustomerLogin;

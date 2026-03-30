@@ -1,14 +1,10 @@
-import { useState } from "react";
-import { useFormik } from "formik";
+import {useState} from "react";
+import {useFormik} from "formik";
 import BasicInfo from "../components/BasicInfo";
 import DetailedInfo from "../components/DetailedInfo";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
+import {registerCustomer} from "../api/authApi";
 
-import {
-    generateAccountNumber,
-    getAccounts,
-    saveAccounts,
-} from "../utils/auth";
 
 import {
     step1Schema,
@@ -39,23 +35,22 @@ const Register = () => {
 
         validationSchema: step === 1 ? step1Schema : step2Schema,
 
-        onSubmit: (values) => {
-            const accountNumber = generateAccountNumber();
+        onSubmit: async (values) => {
+            try {
+                const data = await registerCustomer(values);
 
-            const newUser = {
-                accountNumber,
-                ...values,
-                password: btoa(values.password),
-            };
+                alert(`
+                    Registration Successful!
+                    Account Number: ${data.accountNumber}
+                    Status: ${data.accountStatus}
+                    KYC: ${data.kycStatus}
+                `);
 
-            const accounts = getAccounts();
-            accounts.push(newUser);
-            saveAccounts(accounts);
+                navigate("/customer-login");
 
-            alert(`Registered Successfully!\nAccount Number: ${accountNumber}`);
-            localStorage.removeItem("formData");
-            formik.resetForm();
-            navigate("/login");
+            } catch (error) {
+                alert(error.message);
+            }
         },
     });
 
@@ -83,9 +78,9 @@ const Register = () => {
 
             <form onSubmit={formik.handleSubmit}>
                 {step === 1 ? (
-                    <BasicInfo formik={formik} nextStep={handleNext} />
+                    <BasicInfo formik={formik} nextStep={handleNext}/>
                 ) : (
-                    <DetailedInfo formik={formik} prevStep={() => setStep(1)} />
+                    <DetailedInfo formik={formik} prevStep={() => setStep(1)}/>
                 )}
             </form>
         </div>
