@@ -10,13 +10,12 @@ import {
     Button
 } from "@mui/material";
 import { logoutUser } from "../utils/auth.js";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CustomerDashboard = () => {
 
     const [data, setData] = useState(null);
     const navigate = useNavigate();
-    const location = useLocation();
 
     const handleLogout = () => {
         logoutUser();
