@@ -24,7 +24,7 @@ const CustomerLogin = () => {
             const token = res.data.token;
             setToken(token);
             navigate("/customer-dashboard");
-        } catch (err) {
+        } catch {
             setError("Invalid credentials");
         }
     };

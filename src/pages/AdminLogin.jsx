@@ -24,7 +24,7 @@ const AdminLogin = () => {
             const token = res.data.token;
             setToken(token);
             navigate("/dashboard");
-        } catch (err) {
+        } catch {
             setError("Invalid credentials");
         }
     };

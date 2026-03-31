@@ -33,7 +33,11 @@ const CustomerDashboard = () => {
     };
 
     useEffect(() => {
-        fetchDashboard();
+        if (!location.state?.refresh) return;
+        const load = async () => {
+            await fetchDashboard();
+        };
+        load();
     }, [location.state]);
 
     if (!data) {

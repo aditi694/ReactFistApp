@@ -63,7 +63,9 @@ const AdminDashboard = () => {
             if (!cardRes?.error) {
                 setCards(cardRes.data?.requests || []);
             }
-        } catch {}
+        } catch (err) {
+            console.error("Admin fetch failed:", err);
+        }
     };
 
     const handleApproveKyc = async (id) => {
