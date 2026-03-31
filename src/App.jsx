@@ -5,6 +5,9 @@ import Dashboard from "./pages/Dashboard";
 import CustomerLogin from "./pages/CustomerLogin";
 import { isAuthenticated } from "./utils/auth";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import ApplyLoan from "./pages/ApplyLoan";
+import ApplyCreditCard from "./pages/ApplyCreditCard";
+import ApplyInsurance from "./pages/ApplyInsurance";
 
 function App() {
 
@@ -38,7 +41,9 @@ function App() {
                             : <Navigate to="/customer-login" />
                     }
                 />
-
+                <Route path="/apply-loan" element={<ApplyLoan />} />
+                <Route path="/apply-credit-card" element={<ApplyCreditCard />} />
+                <Route path="/apply-insurance" element={<ApplyInsurance />} />
             </Routes>
         </BrowserRouter>
     );

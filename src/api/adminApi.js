@@ -14,3 +14,21 @@ export const blockCustomer = (id, reason) =>
 
 export const unblockCustomer = (id) =>
     apiRequest(`/api/admin/${id}/unblock`, "PUT");
+
+export const getPendingLoans = () =>
+    apiRequest("/api/admin/loans/pending");
+
+export const approveLoan = (loanId) =>
+    apiRequest(`/api/admin/loans/${loanId}/approve`, "POST");
+
+export const rejectLoan = (loanId) =>
+    apiRequest(`/api/admin/loans/${loanId}/reject`, "POST");
+
+export const getPendingCards = () =>
+    apiRequest("/api/admin/credit-cards/pending");
+
+export const approveCard = (id) =>
+    apiRequest(`/api/admin/credit-cards/approve/${id}`, "POST");
+
+export const rejectCard = (id) =>
+    apiRequest(`/api/admin/credit-cards/reject/${id}?reason=Rejected`, "POST");

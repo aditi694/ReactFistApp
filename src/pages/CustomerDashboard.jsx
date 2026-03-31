@@ -10,21 +10,18 @@ import {
     Button
 } from "@mui/material";
 import { logoutUser } from "../utils/auth.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const CustomerDashboard = () => {
 
     const [data, setData] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         logoutUser();
         navigate("/customer-login");
     };
-
-    useEffect(() => {
-        fetchDashboard();
-    }, []);
 
     const fetchDashboard = async () => {
         try {
@@ -34,6 +31,10 @@ const CustomerDashboard = () => {
             console.error(err);
         }
     };
+
+    useEffect(() => {
+        fetchDashboard();
+    }, [location.state]);
 
     if (!data) {
         return (
@@ -46,7 +47,7 @@ const CustomerDashboard = () => {
     return (
         <Container maxWidth="md" sx={{ mt: 4 }}>
 
-            {/* HEADER FIXED */}
+            {/* HEADER */}
             <Box
                 sx={{
                     display: "flex",
@@ -59,10 +60,7 @@ const CustomerDashboard = () => {
                     Customer Dashboard
                 </Typography>
 
-                <Button
-                    variant="outlined"
-                    onClick={handleLogout}
-                >
+                <Button variant="outlined" onClick={handleLogout}>
                     Logout
                 </Button>
             </Box>
@@ -70,22 +68,18 @@ const CustomerDashboard = () => {
             <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
                 <CardContent>
 
-                    {/* CUSTOMER NAME */}
+                    {/* NAME */}
                     <Typography variant="h5" gutterBottom>
                         {data.customerName}
                     </Typography>
 
                     <Divider sx={{ my: 2 }} />
 
-                    {/* ACCOUNT DETAILS */}
+                    {/* ACCOUNT */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="h6">Account Details</Typography>
-                        <Typography>
-                            Account Number: {data.accountNumber}
-                        </Typography>
-                        <Typography>
-                            Account Type: {data.accountType}
-                        </Typography>
+                        <Typography>Account Number: {data.accountNumber}</Typography>
+                        <Typography>Account Type: {data.accountType}</Typography>
                         <Typography sx={{ fontWeight: "bold" }}>
                             Balance: ₹{data.balance}
                         </Typography>
@@ -93,7 +87,7 @@ const CustomerDashboard = () => {
 
                     <Divider />
 
-                    {/* BANK BRANCH */}
+                    {/* BANK */}
                     <Box sx={{ my: 2 }}>
                         <Typography variant="h6">Bank Branch</Typography>
                         <Typography>{data.bankBranch?.bankName}</Typography>
@@ -118,15 +112,39 @@ const CustomerDashboard = () => {
                     <Box sx={{ my: 2 }}>
                         <Typography variant="h6">Credit Card</Typography>
 
-                        {data.creditCard?.status === "NOT_APPLIED" ? (
-                            <Typography sx={{ color: "gray" }}>
+                        {data.creditCard?.status === "NOT_APPLIED" && (
+                            <>
+                                <Typography sx={{ color: "text.secondary" }}>
+                                    {data.creditCard?.message}
+                                </Typography>
+
+                                <Button
+                                    variant="contained"
+                                    sx={{ mt: 1 }}
+                                    onClick={() => navigate("/apply-credit-card")}
+                                >
+                                    Apply Now
+                                </Button>
+                            </>
+                        )}
+
+                        {data.creditCard?.status === "PENDING_APPROVAL" && (
+                            <Typography sx={{ color: "warning.main" }}>
                                 {data.creditCard?.message}
                             </Typography>
-                        ) : (
+                        )}
+
+                        {data.creditCard?.status === "REJECTED" && (
+                            <Typography sx={{ color: "error.main" }}>
+                                {data.creditCard?.message}
+                            </Typography>
+                        )}
+
+                        {data.creditCard?.status === "ACTIVE" && (
                             <>
-                                <Typography>{data.creditCard?.cardNumber}</Typography>
+                                <Typography>{data.creditCard.cardNumber}</Typography>
                                 <Typography>
-                                    Available: ₹{data.creditCard?.availableCredit}
+                                    Available: ₹{data.creditCard.availableCredit}
                                 </Typography>
                             </>
                         )}
@@ -137,15 +155,46 @@ const CustomerDashboard = () => {
                     {/* LOANS */}
                     <Box sx={{ my: 2 }}>
                         <Typography variant="h6">Loans</Typography>
-                        {data.loans?.length === 0 ? (
-                            <Typography sx={{ color: "gray" }}>
-                                No active loans
-                            </Typography>
+
+                        {!data.loans || data.loans.length === 0 ||
+                        !data.loans.some(l => l.status === "ACTIVE") ? (
+                            <>
+                                <Typography sx={{ color: "text.secondary" }}>
+                                    No active loans
+                                </Typography>
+
+                                <Button
+                                    variant="contained"
+                                    sx={{ mt: 1 }}
+                                    onClick={() => navigate("/apply-loan")}
+                                >
+                                    Apply Loan
+                                </Button>
+                            </>
                         ) : (
                             data.loans.map((loan) => (
-                                <Typography key={loan.loanId}>
-                                    {loan.loanType} - ₹{loan.loanAmount}
-                                </Typography>
+                                <Box key={loan.loanId} sx={{ mb: 1 }}>
+                                    <Typography>{loan.loanType}</Typography>
+
+                                    <Typography
+                                        sx={{
+                                            color:
+                                                loan.status === "ACTIVE"
+                                                    ? "success.main"
+                                                    : loan.status === "REQUESTED"
+                                                        ? "warning.main"
+                                                        : "error.main"
+                                        }}
+                                    >
+                                        {loan.statusMessage}
+                                    </Typography>
+
+                                    {loan.status === "ACTIVE" && (
+                                        <Typography>
+                                            ₹{loan.loanAmount} | EMI ₹{loan.emiAmount}
+                                        </Typography>
+                                    )}
+                                </Box>
                             ))
                         )}
                     </Box>
@@ -154,11 +203,22 @@ const CustomerDashboard = () => {
 
                     {/* INSURANCE */}
                     <Box sx={{ my: 2 }}>
-                        <Typography variant="h6">Insurances</Typography>
-                        {data.insurances?.length === 0 ? (
-                            <Typography sx={{ color: "gray" }}>
-                                No active insurances
-                            </Typography>
+                        <Typography variant="h6">Insurance</Typography>
+
+                        {!data.insurances || data.insurances.length === 0 ? (
+                            <>
+                                <Typography sx={{ color: "text.secondary" }}>
+                                    No insurance found
+                                </Typography>
+
+                                <Button
+                                    variant="contained"
+                                    sx={{ mt: 1 }}
+                                    onClick={() => navigate("/apply-insurance")}
+                                >
+                                    Get Insurance
+                                </Button>
+                            </>
                         ) : (
                             data.insurances.map((ins) => (
                                 <Typography key={ins.policyNumber}>
@@ -187,8 +247,8 @@ const CustomerDashboard = () => {
                             sx={{
                                 color:
                                     data.kyc?.status === "APPROVED"
-                                        ? "green"
-                                        : "orange",
+                                        ? "success.main"
+                                        : "warning.main",
                                 fontWeight: "bold"
                             }}
                         >
