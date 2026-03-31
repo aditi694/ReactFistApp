@@ -22,17 +22,17 @@ const CustomerDashboard = () => {
         navigate("/customer-login");
     };
 
-    const fetchDashboard = async () => {
-        try {
-            const res = await getCustomerDashboard();
-            setData(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     useEffect(() => {
-        fetchDashboard();
+        const fetchData = async () => {
+            try {
+                const res = await getCustomerDashboard();
+                setData(res.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchData();
     }, []);
 
     if (!data) {
