@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Register from "./pages/Register";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CustomerLogin from "./pages/CustomerLogin";
 import { isAuthenticated } from "./utils/auth";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -19,7 +19,7 @@ function App() {
                 <Route path="/" element={<Register />} />
 
                 {/* ADMIN LOGIN */}
-                <Route path="/login" element={<Login />} />
+                <Route path="/login" element={<AdminLogin />} />
 
                 {/* CUSTOMER LOGIN */}
                 <Route path="/customer-login" element={<CustomerLogin />} />
@@ -28,7 +28,7 @@ function App() {
                 <Route
                     path="/dashboard"
                     element={
-                        isAuthenticated() ? <Dashboard /> : <Navigate to="/login" />
+                        isAuthenticated() ? <AdminDashboard /> : <Navigate to="/login" />
                     }
                 />
 

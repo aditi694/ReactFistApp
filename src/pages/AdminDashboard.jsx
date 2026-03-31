@@ -23,7 +23,7 @@ import {
     Divider
 } from "@mui/material";
 
-const Dashboard = () => {
+const AdminDashboard = () => {
 
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -328,4 +328,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default AdminDashboard;
