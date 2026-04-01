@@ -1,49 +1,61 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Register from "./pages/Register";
-import AdminLogin from "./pages/AdminLogin.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import CustomerLogin from "./pages/CustomerLogin";
-import { isAuthenticated } from "./utils/auth";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import ApplyLoan from "./pages/ApplyLoan";
 import ApplyCreditCard from "./pages/ApplyCreditCard";
 import ApplyInsurance from "./pages/ApplyInsurance";
+import TransactionPage from "./pages/TransactionPage";
+import BeneficiaryPage from "./pages/BeneficiaryPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import LimitPage from "./pages/LimitPage";
+import HistoryPage from "./pages/HistoryPage";
+import AdminBeneficiaryPage from "./pages/AdminBeneficiaryPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import TransferPage from "./pages/TransferPage.jsx";
 
 function App() {
-
     return (
         <BrowserRouter>
             <Routes>
 
-                {/* REGISTER */}
                 <Route path="/" element={<Register />} />
-
-                {/* ADMIN LOGIN */}
                 <Route path="/login" element={<AdminLogin />} />
-
-                {/* CUSTOMER LOGIN */}
                 <Route path="/customer-login" element={<CustomerLogin />} />
 
-                {/* ADMIN DASHBOARD */}
+                {/* ADMIN */}
                 <Route
                     path="/dashboard"
                     element={
-                        isAuthenticated() ? <AdminDashboard /> : <Navigate to="/login" />
+                        <ProtectedRoute role="ADMIN" redirectTo="/login">
+                            <AdminDashboard />
+                        </ProtectedRoute>
                     }
                 />
 
-                {/* CUSTOMER DASHBOARD */}
                 <Route
                     path="/customer-dashboard"
                     element={
-                        isAuthenticated()
-                            ? <CustomerDashboard />
-                            : <Navigate to="/customer-login" />
+                        <ProtectedRoute role="CUSTOMER" redirectTo="/customer-login">
+                            <CustomerDashboard />
+                        </ProtectedRoute>
                     }
                 />
+
                 <Route path="/apply-loan" element={<ApplyLoan />} />
                 <Route path="/apply-credit-card" element={<ApplyCreditCard />} />
                 <Route path="/apply-insurance" element={<ApplyInsurance />} />
+
+                <Route path="/transactions" element={<TransactionPage />} />
+                <Route path="/transfer" element={<TransferPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/limits" element={<LimitPage />} />
+                <Route path="/history" element={<HistoryPage />} />
+                <Route path="/beneficiaries" element={<BeneficiaryPage />} />
+                <Route path="/admin/beneficiaries" element={<AdminBeneficiaryPage />} />
+
             </Routes>
         </BrowserRouter>
     );

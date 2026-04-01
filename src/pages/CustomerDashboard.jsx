@@ -85,7 +85,81 @@ const CustomerDashboard = () => {
                     </Box>
 
                     <Divider />
+                    {/*  QUICK ACTIONS */}
+                    <Box sx={{ my: 3 }}>
 
+                        <Typography variant="h6" gutterBottom>
+                            Quick Actions
+                        </Typography>
+
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: {
+                                    xs: "1fr",
+                                    sm: "repeat(2, 1fr)",
+                                    md: "repeat(3, 1fr)"
+                                },
+                                gap: 2
+                            }}
+                        >
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                onClick={() => navigate("/transactions")}
+                            >
+                                Transactions
+                            </Button>
+
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                onClick={() => navigate("/beneficiaries")}
+                            >
+                                Beneficiaries
+                            </Button>
+
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                onClick={() => navigate("/history")}
+                            >
+                                History
+                            </Button>
+
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                onClick={() => navigate("/analytics")}
+                            >
+                                Analytics
+                            </Button>
+
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                onClick={() => navigate("/limits")}
+                            >
+                                Limits
+                            </Button>
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                onClick={() => navigate("/transfer")}
+                            >
+                                Transfer
+                            </Button>
+                        </Box>
+
+                    </Box>
+
+                    <Divider />
                     {/* BANK */}
                     <Box sx={{ my: 2 }}>
                         <Typography variant="h6">Bank Branch</Typography>

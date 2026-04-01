@@ -18,7 +18,6 @@ export const getUserFromToken = () => {
 
         const payload = JSON.parse(atob(parts[1]));
 
-        // ✅ ROBUST ADMIN DETECTION
         const isAdmin =
             payload.roles?.includes("ADMIN") ||
             payload.role === "ADMIN" ||
@@ -32,8 +31,10 @@ export const getUserFromToken = () => {
             customerId: payload.customerId || payload.sub || payload.userId,
             email: payload.email,
             fullName: payload.fullName || payload.name,
-            accountNumber: payload.accountNumber || null,
-            isAdmin,
+            accountNumber:
+                payload.accountNumber ||
+                localStorage.getItem("accountNumber") ||
+                null,            isAdmin,
             raw: payload
         };
     } catch (error) {

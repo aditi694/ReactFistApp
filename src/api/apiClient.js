@@ -3,8 +3,10 @@ const BASE_URL = "http://localhost:8080";
 export const apiRequest = async (endpoint, method = "GET", body = null) => {
     const token = localStorage.getItem("token");
 
+    console.log(` [${method}] ${endpoint} - Token exists:`, !!token);
+
     const headers = {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     };
 
     if (token) {
@@ -15,40 +17,72 @@ export const apiRequest = async (endpoint, method = "GET", body = null) => {
         const response = await fetch(BASE_URL + endpoint, {
             method,
             headers,
-            body: body ? JSON.stringify(body) : null
+            body: body ? JSON.stringify(body) : null,
         });
 
-        if (response.status === 401) {
+        console.log(` ${method} ${endpoint} → Status: ${response.status}`);
+
+        if (response.status === 401 || response.status === 403) {
+            console.log("401/403 - Clearing token and redirecting to login");
             localStorage.removeItem("token");
-            window.location.href = "/login";
-            return { error: true, message: "Session expired. Please login again." };
-        }
-
-        let data = null;
-
-        try {
-            data = await response.json();
-        } catch {
-            data = null;
-        }
-
-        if (!response.ok) {
+            sessionStorage.clear();
+            window.location.href = "/customer-login";
             return {
                 error: true,
-                message:
-                    data?.resultInfo?.resultMsg ||
-                    data?.message ||
-                    data?.error ||
-                    `Server error (${response.status})`
+                message: "Session expired. Please login again.",
+                status: response.status,
+                data: null
             };
         }
 
-        return data;
+        // Try to parse response as JSON
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.warn("⚠️ Response is not JSON");
+            data = null;
+        }
+
+        // Handle non-2xx responses
+        if (!response.ok) {
+            const errorMessage =
+                data?.resultInfo?.resultMsg ||
+                data?.message ||
+                data?.resultMsg ||
+                `Request failed with status ${response.status}`;
+
+            console.error("❌ API Error:", errorMessage);
+
+            return {
+                error: true,
+                message: errorMessage,
+                status: response.status,
+                data: null
+            };
+        }
+
+        const responseData = data?.data || data;
+
+        console.log("✅ Success:", {
+            message: data?.resultInfo?.resultMsg || "Request successful",
+            dataType: Array.isArray(responseData) ? "array" : "object"
+        });
+
+        return {
+            error: false,
+            message: data?.resultInfo?.resultMsg || data?.message || "Success",
+            data: responseData,
+            status: response.status
+        };
 
     } catch (err) {
+        console.error("❌ Network error:", err.message);
         return {
             error: true,
-            message: "Network error. Please check your connection."
+            message: "Network error. Please check if backend is running.",
+            status: 0,
+            data: null
         };
     }
 };
