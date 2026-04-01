@@ -27,20 +27,26 @@ const AdminLogin = () => {
             [e.target.name]: e.target.value
         });
     };
-
     const handleLogin = async (e) => {
         e.preventDefault();
 
         try {
             const res = await adminLogin(form.username, form.password);
             const token = res.data.token;
+
             setToken(token);
-            navigate("/dashboard");
+
+            console.log("✅ Login success");
+
+            // ✅ IMPORTANT: delay navigation slightly (ensures token is saved)
+            setTimeout(() => {
+                navigate("/dashboard", { replace: true });
+            }, 100);
+
         } catch {
             setError("Invalid credentials");
         }
     };
-
     return (
         <Box
             sx={{
