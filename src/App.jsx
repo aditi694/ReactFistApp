@@ -1,13 +1,10 @@
-// App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import AdminLogin from "./pages/AdminLogin";
 import CustomerLogin from "./pages/CustomerLogin";
-
 import AdminDashboard from "./pages/AdminDashboard";
 import CustomerDashboard from "./pages/CustomerDashboard";
-
 import TransferPage from "./pages/TransferPage";
 import TransactionPage from "./pages/TransactionPage";
 import HistoryPage from "./pages/HistoryPage";

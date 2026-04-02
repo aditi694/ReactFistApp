@@ -276,7 +276,7 @@ const CustomerDashboard = () => {
             }
         };
         init().catch(console.error);
-        }, []);
+    }, []);
 
     // Error
     if (loadError) return (
@@ -448,26 +448,26 @@ const CustomerDashboard = () => {
                             justifyContent: "center"
                         }}
                     >
-                            <TextField
-                                fullWidth
-                                placeholder="Search payment, transfer, transaction..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onKeyDown={handleSearch}
-                                size="small"
-                                sx={{
-                                    maxWidth: 400,
-                                    bgcolor: "#F8FAFC",
-                                    borderRadius: 2
-                                }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Search sx={{ fontSize: 18 }} />
-                                        </InputAdornment>
-                                    )
-                                }}
-                            />
+                        <TextField
+                            fullWidth
+                            placeholder="Search payment, transfer, transaction..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={handleSearch}
+                            size="small"
+                            sx={{
+                                maxWidth: 400,
+                                bgcolor: "#F8FAFC",
+                                borderRadius: 2
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search sx={{ fontSize: 18 }} />
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
                     </Box>
 
                     {/* RIGHT SIDE */}
