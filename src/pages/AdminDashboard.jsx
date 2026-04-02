@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
     getAllCustomers,
     updateKyc,
@@ -12,28 +13,31 @@ import {
     approveCard,
     rejectCard
 } from "../api/adminApi";
+
 import { getPendingBeneficiaries } from "../api/beneficiaryApi";
 import { logoutUser } from "../utils/auth";
+
 import {
-    Container,
-    Card,
-    CardContent,
-    CardActions,
-    Typography,
-    Button,
-    Box,
-    Divider,
-    CircularProgress,
-    Alert
+    Container, Typography, Box, Table, TableBody, TableCell,
+    TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
+    Avatar, TextField, InputAdornment, Collapse, Grid, Button,
+    Badge, Card
 } from "@mui/material";
+
+import {
+    Search, KeyboardArrowDown, KeyboardArrowUp,
+    CheckCircle, Cancel, Block, Notifications
+} from "@mui/icons-material";
 
 const AdminDashboard = () => {
     const [customers, setCustomers] = useState([]);
+    const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [loans, setLoans] = useState([]);
     const [cards, setCards] = useState([]);
-    const [pendingBeneficiaryCount, setPendingBeneficiaryCount] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const [pendingCount, setPendingCount] = useState(0);
+    const [expanded, setExpanded] = useState({});
+    const [searchTerm, setSearchTerm] = useState("");
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -41,255 +45,263 @@ const AdminDashboard = () => {
     }, []);
 
     const fetchAll = async () => {
-        try {
-            setLoading(true);
-            setError("");
+        const [custRes, loanRes, cardRes, benRes] = await Promise.all([
+            getAllCustomers(),
+            getPendingLoans(),
+            getPendingCards(),
+            getPendingBeneficiaries()
+        ]);
 
-            const custRes = await getAllCustomers();
-            if (!custRes || custRes.error || !custRes.data) {
-                handleError(custRes);
-                return;
-            }
-            setCustomers(custRes.data);
+        const cust = custRes?.data || [];
+        const loansData = loanRes?.data?.loans || [];
+        const cardsData = cardRes?.data?.requests || [];
+        const benCount = benRes?.data?.length || 0;
 
-            const loanRes = await getPendingLoans();
-            setLoans(loanRes?.data?.loans || []);
+        setCustomers(cust);
+        setFilteredCustomers(cust);
+        setLoans(loansData);
+        setCards(cardsData);
 
-            const cardRes = await getPendingCards();
-            setCards(cardRes?.data?.requests || []);
-
-            const benRes = await getPendingBeneficiaries();
-            if (!benRes?.error && Array.isArray(benRes?.data)) {
-                setPendingBeneficiaryCount(benRes.data.length);
-            } else {
-                setPendingBeneficiaryCount(0);
-            }
-        } catch {
-            setError("Failed to load admin data");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleError = (res) => {
-        if (res?.message === "Unauthorized") {
-            logoutUser();
-            navigate("/login");
-        } else {
-            setError(res?.message || "Something went wrong");
-        }
-    };
-
-    const getCustomerMeta = (customer) => {
-        const loan = loans.find(
-            (l) =>
-                l.customerId === customer.customerId ||
-                l.account?.customerId === customer.customerId
+        setPendingCount(
+            loansData.length + cardsData.length + benCount
         );
-        const card = cards.find(
-            (c) =>
-                c.customerId === customer.customerId ||
-                c.account?.customerId === customer.customerId
+    };
+
+    useEffect(() => {
+        const filtered = customers.filter(c =>
+            c.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.email?.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        return {
-            loanStatus: loan?.status || "NONE",
-            loanId: loan?.loanId,
-            cardStatus: card?.status || "NONE",
-            cardId: card?.id
-        };
+        setFilteredCustomers(filtered);
+    }, [searchTerm, customers]);
+
+    const toggleExpand = (id) => {
+        setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    // ACTIONS
-    const handleApproveKyc = async (id) => {
-        await updateKyc(id, "APPROVED", "Verified");
-        fetchAll();
+    const getMeta = (c) => {
+        const loan = loans.find(l => l.customerId === c.customerId);
+        const card = cards.find(cd => cd.customerId === c.customerId);
+        return { loan, card };
     };
-
-    const handleRejectKyc = async (id) => {
-        await updateKyc(id, "REJECTED", "Invalid");
-        fetchAll();
-    };
-
-    const handleBlock = async (id) => {
-        await blockCustomer(id, "Suspicious");
-        fetchAll();
-    };
-
-    const handleUnblock = async (id) => {
-        await unblockCustomer(id);
-        fetchAll();
-    };
-
-    const handleApproveLoan = async (id) => {
-        await approveLoan(id);
-        fetchAll();
-    };
-
-    const handleRejectLoan = async (id) => {
-        await rejectLoan(id);
-        fetchAll();
-    };
-
-    const handleApproveCard = async (id) => {
-        await approveCard(id);
-        fetchAll();
-    };
-
-    const handleRejectCard = async (id) => {
-        await rejectCard(id);
-        fetchAll();
-    };
-
-    const handleLogout = () => {
-        logoutUser();
-        navigate("/login", { replace: true });
-    };
-
-    // UI STATES
-    if (loading) {
-        return (
-            <Container sx={{ mt: 4, textAlign: "center" }}>
-                <CircularProgress />
-            </Container>
-        );
-    }
-
-    if (error) {
-        return (
-            <Container sx={{ mt: 4 }}>
-                <Typography color="error">{error}</Typography>
-            </Container>
-        );
-    }
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Container maxWidth="xl" sx={{ mt: 4 }}>
+
             {/* HEADER */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-                <Typography variant="h4">Admin Dashboard</Typography>
-                <Button variant="outlined" onClick={handleLogout}>
-                    Logout
-                </Button>
-            </Box>
+            <Card sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Box>
+                        <Typography variant="h4" fontWeight={700}>
+                            Admin Dashboard
+                        </Typography>
+                        <Typography color="text.secondary">
+                            Banking Control Panel
+                        </Typography>
+                    </Box>
 
-            <Typography variant="h6" sx={{ mb: 2 }}>
-                Customers
-            </Typography>
+                    {/* 🔔 NOTIFICATION BUTTON */}
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                        <IconButton onClick={() => navigate("/admin/pending")}>
+                            <Badge badgeContent={pendingCount} color="error">
+                                <Notifications />
+                            </Badge>
+                        </IconButton>
 
-            {customers.map((c) => {
-                const meta = getCustomerMeta(c);
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => {
+                                logoutUser();
+                                navigate("/login");
+                            }}
+                        >
+                            Logout
+                        </Button>
+                    </Box>
+                </Box>
+            </Card>
 
-                return (
-                    <Card key={c.customerId} sx={{ mb: 2, borderRadius: 3 }}>
-                        <CardContent>
-                            <Typography variant="h6">{c.fullName}</Typography>
-                            <Typography color="text.secondary">{c.email}</Typography>
-                            <Typography color="text.secondary">{c.phone}</Typography>
-                            <Divider sx={{ my: 1 }} />
-                            <Typography>
-                                Status:{" "}
-                                <Box component="span" sx={{
-                                    color: c.status === "ACTIVE" ? "success.main" : "error.main",
-                                    fontWeight: "bold"
-                                }}>
-                                    {c.status}
-                                </Box>
-                            </Typography>
-                            <Typography>
-                                KYC:{" "}
-                                <Box component="span" sx={{
-                                    color: c.kycStatus === "APPROVED" ? "success.main" : "warning.main",
-                                    fontWeight: "bold"
-                                }}>
-                                    {c.kycStatus}
-                                </Box>
-                            </Typography>
-                            <Divider sx={{ my: 1 }} />
-                            {meta.loanStatus !== "NONE" && (
-                                <Typography>Loan: {meta.loanStatus}</Typography>
-                            )}
-                            {meta.cardStatus !== "NONE" && (
-                                <Typography>Card: {meta.cardStatus}</Typography>
-                            )}
-                            <Typography sx={{ mt: 1, fontSize: 12 }}>
-                                Created: {new Date(c.createdAt).toLocaleString()}
-                            </Typography>
-                        </CardContent>
-                        <CardActions sx={{ flexWrap: "wrap", gap: 1, px: 2, pb: 2 }}>
-                            {/* KYC */}
-                            {c.kycStatus === "PENDING" && (
+            {/* SEARCH */}
+            <TextField
+                fullWidth
+                placeholder="Search customers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ mb: 3 }}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <Search />
+                        </InputAdornment>
+                    )
+                }}
+            />
+
+            {/* TABLE */}
+            <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell />
+                            <TableCell>Name</TableCell>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Phone</TableCell>
+                            <TableCell>KYC</TableCell>
+                            <TableCell>Status</TableCell>
+                        </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                        {filteredCustomers.map((c) => {
+                            const isOpen = expanded[c.customerId];
+                            const meta = getMeta(c);
+
+                            return (
                                 <>
-                                    <Button size="small" color="success" variant="contained"
-                                            onClick={() => handleApproveKyc(c.customerId)}>
-                                        Approve KYC
-                                    </Button>
-                                    <Button size="small" color="error" variant="contained"
-                                            onClick={() => handleRejectKyc(c.customerId)}>
-                                        Reject KYC
-                                    </Button>
-                                </>
-                            )}
-                            {/* LOAN */}
-                            {["REQUESTED", "PENDING"].includes(meta.loanStatus) && (
-                                <>
-                                    <Button size="small" color="success" variant="contained"
-                                            onClick={() => handleApproveLoan(meta.loanId)}>
-                                        Approve Loan
-                                    </Button>
-                                    <Button size="small" color="error" variant="contained"
-                                            onClick={() => handleRejectLoan(meta.loanId)}>
-                                        Reject Loan
-                                    </Button>
-                                </>
-                            )}
-                            {/* CARD */}
-                            {["PENDING"].includes(meta.cardStatus) && (
-                                <>
-                                    <Button size="small" color="success" variant="contained"
-                                            onClick={() => handleApproveCard(meta.cardId)}>
-                                        Approve Card
-                                    </Button>
-                                    <Button size="small" color="error" variant="contained"
-                                            onClick={() => handleRejectCard(meta.cardId)}>
-                                        Reject Card
-                                    </Button>
-                                </>
-                            )}
-                            {/* BLOCK */}
-                            {c.status === "ACTIVE" && (
-                                <Button size="small" variant="outlined" color="warning"
-                                        onClick={() => handleBlock(c.customerId)}>
-                                    Block
-                                </Button>
-                            )}
-                            {c.status === "BLOCKED" && (
-                                <Button size="small" variant="contained"
-                                        onClick={() => handleUnblock(c.customerId)}>
-                                    Unblock
-                                </Button>
-                            )}
-                        </CardActions>
-                    </Card>
-                );
-            })}
+                                    {/* MAIN ROW */}
+                                    <TableRow hover key={c.customerId}>
+                                        <TableCell>
+                                            <IconButton onClick={() => toggleExpand(c.customerId)}>
+                                                {isOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                                            </IconButton>
+                                        </TableCell>
 
-            {/* ✅ BENEFICIARY SUMMARY - ONLY ONE SECTION AT THE BOTTOM */}
-            <Box sx={{ mt: 5, p: 3, border: "1px solid #ddd", borderRadius: 2, textAlign: "center" }}>
-                <Typography variant="h6" gutterBottom>
-                    Beneficiary Management
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                    Total Pending Beneficiaries: <strong>{pendingBeneficiaryCount}</strong>
-                </Typography>
-                <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => navigate("/admin/beneficiaries")}
-                    sx={{ px: 4 }}
-                >
-                    Manage Pending Beneficiaries
-                </Button>
-            </Box>
+                                        <TableCell>
+                                            <Box sx={{ display: "flex", gap: 2 }}>
+                                                <Avatar sx={{ bgcolor: "#2563EB" }}>
+                                                    {c.fullName?.charAt(0)}
+                                                </Avatar>
+                                                {c.fullName}
+                                            </Box>
+                                        </TableCell>
+
+                                        <TableCell>{c.email}</TableCell>
+                                        <TableCell>{c.phone}</TableCell>
+
+                                        <TableCell>
+                                            <Chip
+                                                label={c.kycStatus}
+                                                color={c.kycStatus === "APPROVED" ? "success" : "warning"}
+                                            />
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <Chip
+                                                label={c.status}
+                                                color={c.status === "ACTIVE" ? "success" : "error"}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+
+                                    {/* EXPANDED */}
+                                    <TableRow>
+                                        <TableCell colSpan={6} sx={{ p: 0 }}>
+                                            <Collapse in={isOpen}>
+                                                <Box sx={{ p: 3, bgcolor: "#F8FAFC" }}>
+                                                    <Grid container spacing={2}>
+
+                                                        {/* CREATED */}
+                                                        <Grid item xs={12}>
+                                                            <Typography fontSize={12} color="gray">
+                                                                Created At:
+                                                            </Typography>
+                                                            <Typography fontWeight={600}>
+                                                                {new Date(c.createdAt).toLocaleDateString("en-IN")}
+                                                            </Typography>
+                                                        </Grid>
+
+                                                        {/* KYC */}
+                                                        {c.kycStatus === "PENDING" && (
+                                                            <Grid item>
+                                                                <Button
+                                                                    variant="contained"
+                                                                    color="success"
+                                                                    startIcon={<CheckCircle />}
+                                                                    onClick={() => updateKyc(c.customerId, "APPROVED")}
+                                                                >
+                                                                    Approve KYC
+                                                                </Button>
+
+                                                                <Button
+                                                                    variant="contained"
+                                                                    color="error"
+                                                                    sx={{ ml: 1 }}
+                                                                    onClick={() => updateKyc(c.customerId, "REJECTED")}
+                                                                >
+                                                                    Reject
+                                                                </Button>
+                                                            </Grid>
+                                                        )}
+
+                                                        {/* LOAN */}
+                                                        {meta.loan && (
+                                                            <Grid item>
+                                                                <Button
+                                                                    color="success"
+                                                                    onClick={() => approveLoan(meta.loan.loanId)}
+                                                                >
+                                                                    Approve Loan
+                                                                </Button>
+                                                                <Button
+                                                                    color="error"
+                                                                    onClick={() => rejectLoan(meta.loan.loanId)}
+                                                                >
+                                                                    Reject Loan
+                                                                </Button>
+                                                            </Grid>
+                                                        )}
+
+                                                        {/* CARD */}
+                                                        {meta.card && (
+                                                            <Grid item>
+                                                                <Button
+                                                                    color="success"
+                                                                    onClick={() => approveCard(meta.card.id)}
+                                                                >
+                                                                    Approve Card
+                                                                </Button>
+                                                                <Button
+                                                                    color="error"
+                                                                    onClick={() => rejectCard(meta.card.id)}
+                                                                >
+                                                                    Reject Card
+                                                                </Button>
+                                                            </Grid>
+                                                        )}
+
+                                                        {/* BLOCK */}
+                                                        <Grid item>
+                                                            {c.status === "ACTIVE" ? (
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    color="warning"
+                                                                    startIcon={<Block />}
+                                                                    onClick={() => blockCustomer(c.customerId)}
+                                                                >
+                                                                    Block Customer
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="contained"
+                                                                    onClick={() => unblockCustomer(c.customerId)}
+                                                                >
+                                                                    Unblock
+                                                                </Button>
+                                                            )}
+                                                        </Grid>
+
+                                                    </Grid>
+                                                </Box>
+                                            </Collapse>
+                                        </TableCell>
+                                    </TableRow>
+                                </>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Container>
     );
 };

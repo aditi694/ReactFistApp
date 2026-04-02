@@ -7,161 +7,281 @@ import {
     Button,
     Container,
     Grid,
-    Card,
-    CardContent,
     Box,
-    Stack,
+    Stack
 } from "@mui/material";
-
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import SecurityIcon from "@mui/icons-material/Security";
-import SpeedIcon from "@mui/icons-material/Speed";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import InsightsIcon from "@mui/icons-material/Insights";
 
 const LandingPage = () => {
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ backgroundColor: "#fafafa", minHeight: "100vh" }}>
+        <Box
+            sx={{
+                minHeight: "100vh",
+                background: "linear-gradient(180deg,#F8FAFC,#EEF2FF)",
+            }}
+        >
 
-            {/* 🔹 HEADER */}
-            <AppBar position="static" color="inherit" elevation={1}>
-                <Toolbar sx={{ px: 4 }}>
-                    <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                        SmartBank
-                    </Typography>
+            {/* HEADER */}
+            <AppBar
+                position="sticky"
+                elevation={0}
+                sx={{
+                    bgcolor: "rgba(255,255,255,0.7)",
+                    backdropFilter: "blur(12px)",
+                    borderBottom: "1px solid #E5E7EB"
+                }}
+            >
+                <Toolbar sx={{ px: { xs: 2, md: 4 }, py: 1 }}>
 
-                    <Stack direction="row" spacing={2}>
+                    {/* LOGO */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexGrow: 1 }}>
+                        <Box
+                            sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                background: "linear-gradient(135deg,#6366F1,#4F46E5)"
+                            }}
+                        />
+                        <Typography fontWeight={800}>
+                            UNION BANK
+                        </Typography>
+                    </Box>
+
+                    {/* NAV BUTTONS */}
+                    <Stack direction="row" spacing={1} alignItems="center">
+
                         <Button
-                            variant="outlined"
-                            onClick={() => navigate("/admin-login")}
+                            sx={{
+                                color: "#374151",
+                                textTransform: "none",
+                                fontWeight: 500
+                            }}
+                            onClick={() => navigate("/login")}
                         >
-                            Admin Login
+                            Admin
                         </Button>
 
                         <Button
-                            variant="outlined"
+                            sx={{
+                                color: "#374151",
+                                textTransform: "none",
+                                fontWeight: 500
+                            }}
                             onClick={() => navigate("/customer-login")}
                         >
-                            Customer Login
+                            Login
                         </Button>
 
                         <Button
                             variant="contained"
+                            sx={{
+                                textTransform: "none",
+                                borderRadius: 3,
+                                px: 2.5,
+                                background: "linear-gradient(135deg,#6366F1,#4F46E5)",
+                                boxShadow: "0 4px 14px rgba(99,102,241,0.4)"
+                            }}
                             onClick={() => navigate("/register")}
                         >
-                            Signup
+                            Get Started
                         </Button>
+
                     </Stack>
+
                 </Toolbar>
             </AppBar>
 
-            {/* 🔹 HERO */}
-            <Container sx={{ py: 10 }}>
-                <Grid container spacing={4} alignItems="center">
+            {/* HERO */}
+            <Container maxWidth="lg">
 
-                    {/* LEFT */}
-                    <Grid item xs={12} md={6}>
-                        <Typography variant="h3" fontWeight="bold" gutterBottom>
-                            Smart Banking App
-                        </Typography>
+                <Box
+                    sx={{
+                        mt: 6,
+                        px: 5,
+                        py: 6,
+                        borderRadius: 5,
+                        bgcolor: "#fff",
+                        boxShadow: "0 25px 80px rgba(0,0,0,0.08)",
+                        position: "relative",
+                        overflow: "hidden"
+                    }}
+                >
 
-                        <Typography variant="h6" color="text.secondary" mb={4}>
-                            Manage accounts, transfers, analytics, and financial services — all in one place.
-                        </Typography>
+                    {/* BACKGROUND GLOW */}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: -50,
+                            right: -50,
+                            width: 200,
+                            height: 200,
+                            bgcolor: "#6366F1",
+                            opacity: 0.15,
+                            borderRadius: "50%",
+                            filter: "blur(80px)"
+                        }}
+                    />
 
-                        <Stack direction="row" spacing={2}>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                onClick={() => navigate("/register")}
-                            >
-                                Get Started
-                            </Button>
+                    <Grid container spacing={6} alignItems="center">
 
-                            <Button
-                                variant="outlined"
-                                size="large"
-                                onClick={() => navigate("/customer-login")}
-                            >
-                                Login
-                            </Button>
-                        </Stack>
-                    </Grid>
+                        {/* LEFT */}
+                        <Grid item xs={12} md={6}>
 
-                    {/* RIGHT */}
-                    <Grid item xs={12} md={6}>
-                        <Box
-                            sx={{
-                                height: 260,
-                                borderRadius: 3,
-                                backgroundColor: "#e3f2fd",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Typography variant="h6" color="primary">
-                                Dashboard Preview
+                            <Typography fontSize={14} color="text.secondary" mb={1}>
+                                🔥 Trusted by 10M+ users
                             </Typography>
-                        </Box>
-                    </Grid>
 
-                </Grid>
-            </Container>
-
-            {/* 🔹 FEATURES (ONE LINE CARDS STYLE) */}
-            <Container sx={{ pb: 10 }}>
-                <Typography variant="h5" fontWeight="bold" mb={4}>
-                    Key Features
-                </Typography>
-
-                <Grid container spacing={2}>
-
-                    {[
-                        {
-                            icon: <AccountBalanceIcon color="primary" />,
-                            title: "Account Management",
-                        },
-                        {
-                            icon: <SwapHorizIcon color="primary" />,
-                            title: "Instant Transfers",
-                        },
-                        {
-                            icon: <SecurityIcon color="primary" />,
-                            title: "Secure System",
-                        },
-                        {
-                            icon: <InsightsIcon color="primary" />,
-                            title: "Analytics & Reports",
-                        },
-                        {
-                            icon: <SpeedIcon color="primary" />,
-                            title: "Fast Processing",
-                        },
-                    ].map((feature, index) => (
-                        <Grid item xs={12} sm={6} md={2.4} key={index}>
-                            <Card
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    px: 2,
-                                    py: 2,
-                                    borderRadius: 2,
-                                    boxShadow: 1,
-                                }}
+                            <Typography
+                                variant="h2"
+                                fontWeight={800}
+                                lineHeight={1.2}
                             >
-                                <Box mr={2}>{feature.icon}</Box>
-                                <Typography variant="body1" fontWeight={500}>
-                                    {feature.title}
-                                </Typography>
-                            </Card>
-                        </Grid>
-                    ))}
+                                Banking Made
+                                <br />
+                                Simple &{" "}
+                                <Box component="span" sx={{ color: "#6366F1" }}>
+                                    Secure
+                                </Box>
+                            </Typography>
 
-                </Grid>
+                            <Typography color="text.secondary" mt={2} mb={4}>
+                                Experience seamless payments, instant transfers,
+                                and powerful financial insights — all in one platform.
+                            </Typography>
+
+                            <Stack direction="row" spacing={2}>
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    sx={{
+                                        borderRadius: 5,
+                                        px: 4,
+                                        py: 1.2,
+                                        background: "linear-gradient(135deg,#6366F1,#4F46E5)"
+                                    }}
+                                    onClick={() => navigate("/register")}
+                                >
+                                    Get Started
+                                </Button>
+
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    sx={{ borderRadius: 5, px: 4 }}
+                                    onClick={() => navigate("/customer-login")}
+                                >
+                                    Open Account
+                                </Button>
+                            </Stack>
+
+                        </Grid>
+
+                        {/* RIGHT SIDE (IMPROVED BIG UI 🔥) */}
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ position: "relative" }}>
+
+                                {/* MAIN CARD */}
+                                <Box
+                                    sx={{
+                                        p: 3,
+                                        borderRadius: 4,
+                                        bgcolor: "#F8FAFC",
+                                        border: "1px solid #E5E7EB",
+                                        boxShadow: "0 15px 40px rgba(0,0,0,0.08)"
+                                    }}
+                                >
+                                    <Typography fontWeight={600}>Dashboard</Typography>
+
+                                    <Box
+                                        sx={{
+                                            mt: 2,
+                                            p: 2,
+                                            borderRadius: 3,
+                                            background: "linear-gradient(135deg,#6366F1,#4F46E5)",
+                                            color: "#fff"
+                                        }}
+                                    >
+                                        <Typography fontSize={12}>Total Balance</Typography>
+                                        <Typography variant="h6">₹••••••</Typography>
+                                    </Box>
+
+                                    <Box
+                                        sx={{
+                                            mt: 2,
+                                            height: 60,
+                                            borderRadius: 2,
+                                            bgcolor: "#E0E7FF"
+                                        }}
+                                    />
+
+                                    <Box mt={2}>
+                                        <Typography fontSize={13}>
+                                            Transfer <span style={{ color: "green" }}>+₹2000</span>
+                                        </Typography>
+                                        <Typography fontSize={13}>
+                                            Shopping <span style={{ color: "red" }}>-₹500</span>
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                {/* FLOATING SMALL CARD 🔥 */}
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        top: -20,
+                                        right: -20,
+                                        p: 2,
+                                        borderRadius: 3,
+                                        bgcolor: "#fff",
+                                        boxShadow: 3,
+                                        fontSize: 12
+                                    }}
+                                >
+                                    💳 Card Active
+                                </Box>
+
+                                {/* FLOATING BADGE */}
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        bottom: -15,
+                                        left: -15,
+                                        p: 2,
+                                        borderRadius: 3,
+                                        bgcolor: "#fff",
+                                        boxShadow: 3,
+                                        fontSize: 12
+                                    }}
+                                >
+                                    ⚡ Instant Transfer
+                                </Box>
+
+                            </Box>
+                        </Grid>
+
+                    </Grid>
+                </Box>
+
             </Container>
+
+            {/* FOOTER */}
+            <Box
+                sx={{
+                    mt: 8,
+                    py: 4,
+                    textAlign: "center",
+                    bgcolor: "#111827",
+                    color: "#fff"
+                }}
+            >
+                <Typography fontWeight={600}>UNION BANK</Typography>
+                <Typography fontSize={13} mt={1}>
+                    © 2026 Secure Banking System. All rights reserved.
+                </Typography>
+            </Box>
+
         </Box>
     );
 };

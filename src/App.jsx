@@ -19,6 +19,7 @@ import LimitPage from "./pages/LimitPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminPending from "./pages/AdminPending.jsx";
 
 function App() {
     return (
@@ -59,6 +60,7 @@ function App() {
                 <Route path="/apply-insurance" element={<ApplyInsurance />} />
                 <Route path="/limits" element={<LimitPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/admin/pending" element={<AdminPending />} />
             </Routes>
         </BrowserRouter>
     );

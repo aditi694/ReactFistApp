@@ -3,10 +3,10 @@ import { getCustomerDashboard } from "../api/customerApi";
 import { getTransactions } from "../api/transactionApi";
 import { getAnalytics } from "../api/analyticsApi";
 import { logoutUser, getUserFromToken } from "../utils/auth.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
     Box, Typography, Avatar, IconButton, Chip,
-    Card, CardContent, LinearProgress, Menu, MenuItem
+    Card, CardContent, LinearProgress, Menu, MenuItem, TextField, InputAdornment
 } from "@mui/material";
 import {
     AccountBalanceWallet, TrendingUp, SwapHoriz,
@@ -15,7 +15,12 @@ import {
     Add, Logout, ShowChart, ArrowUpward, ArrowDownward,
     Receipt, Shield, Savings
 } from "@mui/icons-material";
+import { Drawer } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { Squash as Hamburger } from "hamburger-react";
+import {runInContext as menuItems} from "lodash";
 
+// Charts
 const DonutChart = ({ categories }) => {
     if (!categories || categories.length === 0) {
         return (
@@ -209,7 +214,16 @@ const CustomerDashboard = () => {
     const [loadError, setLoadError] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const navigate = useNavigate();
-
+    const location = useLocation();
+    const [searchTerm, setSearchTerm] = useState("");
+    const menuItems = [
+        { icon: ShowChart, label: "Dashboard", path: "/customer-dashboard" },
+        { icon: SwapHoriz, label: "Transactions", path: "/transactions" },
+        { icon: CreditCard, label: "Credit Cards", path: "/apply-credit-card" },
+        { icon: Receipt, label: "Payments", path: "/transfer" },
+        { icon: History, label: "Recent History", path: "/history" },
+        { icon: Savings, label: "Loan Application", path: "/apply-loan" }
+    ];
     const handleLogout = () => { logoutUser(); navigate("/customer-login"); };
     const processCategoryData = (analyticsData) => {
         if (!analyticsData?.categoryBreakdown || analyticsData.categoryBreakdown.length === 0) {
@@ -217,10 +231,15 @@ const CustomerDashboard = () => {
         }
         return analyticsData.categoryBreakdown
             .filter(c => c?.amount > 0)
-            .sort((a, b) => b.amount - a.amount); // Sort by amount descending
+            .sort((a, b) => b.amount - a.amount);
     };
     const processedCategories = processCategoryData(analytics);
-
+    const [menuOpen, setMenuOpen] = useState(false);
+    const handleSearch = (e) => {
+        if (e.key === "Enter" && searchTerm.trim()) {
+            navigate(`/search?query=${searchTerm}`);
+        }
+    };
     useEffect(() => {
         const init = async () => {
             try {
@@ -230,7 +249,6 @@ const CustomerDashboard = () => {
                 setData(res.data);
                 const accNum = res.data?.accountNumber;
 
-                // Fetch real transactions (top 4)
                 if (accNum) {
                     try {
                         const txRes = await getTransactions(accNum);
@@ -240,7 +258,6 @@ const CustomerDashboard = () => {
                     }
                 }
 
-                // Fetch analytics for current month
                 const user = getUserFromToken();
                 const acc  = accNum || user?.accountNumber;
                 if (acc) {
@@ -292,7 +309,67 @@ const CustomerDashboard = () => {
 
     return (
         <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#F1F5F9" }}>
+            <Drawer
+                anchor="left"
+                open={menuOpen}
+                onClose={() => setMenuOpen(false)}
+                sx={{ display: { xs: "block", md: "none" } }}
+            >
+                <Box sx={{ width: 220, p: 2 }}>
 
+                    <Typography sx={{ fontWeight: "bold", mb: 2 }}>
+                        Menu
+                    </Typography>
+
+                    {menuItems.map(({ icon: Icon, label, path }) => {
+
+                        const isActive = location.pathname === path;
+
+                        return (
+                            <Box
+                                key={label}
+                                onClick={() => {
+                                    navigate(path);
+                                    setMenuOpen(false);
+                                }}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1.5,
+                                    p: 1,
+                                    borderRadius: 2,
+                                    cursor: "pointer",
+                                    mb: 1,
+
+                                    bgcolor: isActive ? "#E0F2FE" : "transparent",
+                                    color: isActive ? "#2563EB" : "#000",
+
+                                    "&:hover": {
+                                        bgcolor: "#F1F5F9"
+                                    }
+                                }}
+                            >
+                                <Icon sx={{ fontSize: 18 }} />
+                                <Typography sx={{ fontSize: 14 }}>
+                                    {label}
+                                </Typography>
+                            </Box>
+                        );
+                    })}
+
+                    <Typography
+                        onClick={handleLogout}
+                        sx={{
+                            mt: 3,
+                            color: "red",
+                            cursor: "pointer"
+                        }}
+                    >
+                        Logout
+                    </Typography>
+
+                </Box>
+            </Drawer>
             {/* ══════════ SIDEBAR ══════════════════════════════════════ */}
             <Box sx={{
                 display: { xs: "none", md: "flex" },
@@ -341,34 +418,116 @@ const CustomerDashboard = () => {
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
                 {/* TOP BAR */}
-                <Box sx={{ bgcolor: "#fff", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", px: 3, py: 1.5, gap: 2 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, bgcolor: "#F8FAFC", borderRadius: 2, px: 2, py: 1, maxWidth: 320, flex: 1, border: "1px solid #E5E7EB" }}>
-                        <Search sx={{ fontSize: 15, color: "#9CA3AF" }} />
-                        <Typography sx={{ fontSize: 13, color: "#9CA3AF" }}>Search payment, transfer, transaction...</Typography>
-                    </Box>
+                <Box
+                    sx={{
+                        bgcolor: "#fff",
+                        borderBottom: "1px solid #E5E7EB",
+                        display: "flex",
+                        alignItems: "center",
+                        px: 3,
+                        py: 1.5
+                    }}
+                >
 
-                    <Box sx={{ flex: 1 }} />
-
-                    <IconButton size="small" sx={{ bgcolor: "#F8FAFC", border: "1px solid #E5E7EB" }}>
-                        <Notifications sx={{ fontSize: 18, color: "#374151" }} />
-                    </IconButton>
-
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, cursor: "pointer" }} onClick={(e) => setAnchorEl(e.currentTarget)}>
-                        <Avatar sx={{ width: 33, height: 33, bgcolor: "#2563EB", fontSize: 13, fontWeight: 700 }}>
-                            {data?.customerName?.charAt(0)}
-                        </Avatar>
-                        <Box>
-                            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>{data?.customerName}</Typography>
-                            <Typography sx={{ fontSize: 11, color: "#6B7280", textTransform: "uppercase", letterSpacing: 0.3 }}>
-                                {data.accountType?.split(" ")[0] || "SAVINGS"}
-                            </Typography>
+                    {/* LEFT SIDE */}
+                    <Box sx={{ display: "flex", alignItems: "center", width: "25%" }}>
+                        <Box sx={{ display: { xs: "block", md: "none" } }}>
+                            <Hamburger
+                                toggled={menuOpen}
+                                toggle={setMenuOpen}
+                                size={20}
+                            />
                         </Box>
                     </Box>
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                        <MenuItem onClick={handleLogout} sx={{ fontSize: 13, color: "#EF4444" }}>
+
+                    {/* CENTER SEARCH BAR */}
+                    <Box
+                        sx={{
+                            width: "50%",
+                            display: "flex",
+                            justifyContent: "center"
+                        }}
+                    >
+                            <TextField
+                                fullWidth
+                                placeholder="Search payment, transfer, transaction..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={handleSearch}
+                                size="small"
+                                sx={{
+                                    maxWidth: 400,
+                                    bgcolor: "#F8FAFC",
+                                    borderRadius: 2
+                                }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search sx={{ fontSize: 18 }} />
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
+                    </Box>
+
+                    {/* RIGHT SIDE */}
+                    <Box
+                        sx={{
+                            width: "25%",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            gap: 1.5
+                        }}
+                    >
+                        <IconButton
+                            size="small"
+                            sx={{ bgcolor: "#F8FAFC", border: "1px solid #E5E7EB" }}
+                        >
+                            <Notifications sx={{ fontSize: 18, color: "#374151" }} />
+                        </IconButton>
+
+                        <Box
+                            sx={{ display: "flex", alignItems: "center", gap: 1.2, cursor: "pointer" }}
+                            onClick={(e) => setAnchorEl(e.currentTarget)}
+                        >
+                            <Avatar
+                                sx={{
+                                    width: 33,
+                                    height: 33,
+                                    bgcolor: "#2563EB",
+                                    fontSize: 13,
+                                    fontWeight: 700
+                                }}
+                            >
+                                {data?.customerName?.charAt(0)}
+                            </Avatar>
+
+                            <Box>
+                                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>
+                                    {data?.customerName}
+                                </Typography>
+
+                                <Typography sx={{ fontSize: 11, color: "#6B7280" }}>
+                                    {data.accountType?.split(" ")[0] || "SAVINGS"}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={() => setAnchorEl(null)}
+                    >
+                        <MenuItem
+                            onClick={handleLogout}
+                            sx={{ fontSize: 13, color: "#EF4444" }}
+                        >
                             <Logout sx={{ fontSize: 15, mr: 1 }} /> Logout
                         </MenuItem>
                     </Menu>
+
                 </Box>
 
                 {/* PAGE CONTENT */}

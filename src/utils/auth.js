@@ -24,19 +24,18 @@ export const getUserFromToken = () => {
             payload.authorities?.includes("ADMIN") ||
             payload.isAdmin === true;
 
-        console.log("✅ FULL TOKEN PAYLOAD:", payload);
-        console.log("👤 isAdmin:", isAdmin);
-
         return {
             customerId: payload.customerId || payload.sub || payload.userId,
             email: payload.email,
             fullName: payload.fullName || payload.name,
-            accountNumber:
-                payload.accountNumber ||
-                localStorage.getItem("accountNumber") ||
-                null,            isAdmin,
+
+            // ✅ ONLY FROM TOKEN (NO localStorage)
+            accountNumber: payload.accountNumber || null,
+
+            isAdmin,
             raw: payload
         };
+
     } catch (error) {
         console.error("❌ Error decoding token:", error);
         return null;
@@ -65,9 +64,9 @@ export const getUserRole = () => {
  * Logout user
  */
 export const logoutUser = () => {
-    localStorage.removeItem("token");
+    localStorage.clear();   // ✅ clears old account also
     sessionStorage.clear();
-    console.log("✅ Logged out");
+    console.log("✅ Logged out clean");
 };
 
 /**

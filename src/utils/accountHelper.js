@@ -2,18 +2,15 @@ import { getAccountNumberFromAPI, getUserFromToken } from "./auth";
 
 export const getAccountNumber = async () => {
 
-    // 1. check cache
-    const cached = localStorage.getItem("accountNumber");
-    if (cached) return cached;
-
-    // 2. fetch from API
     const user = getUserFromToken();
-    const acc = await getAccountNumberFromAPI(user);
 
-    if (acc) {
-        localStorage.setItem("accountNumber", acc);
-        return acc;
+    // ✅ FIRST: try token
+    if (user?.accountNumber) {
+        return user.accountNumber;
     }
 
-    return null;
+    // ✅ SECOND: fallback API
+    const acc = await getAccountNumberFromAPI(user);
+
+    return acc || null;
 };
