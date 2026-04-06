@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { getCustomerDashboard } from "../api/customerApi";
-import { getTransactions } from "../api/transactionApi";
-import { getAnalytics } from "../api/analyticsApi";
-import { logoutUser, getUserFromToken } from "../utils/auth.js";
+import { logoutUser } from "../utils/auth.js";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
     Box, Typography, Avatar, IconButton, Chip,
-    Card, CardContent, LinearProgress, Menu, MenuItem, TextField, InputAdornment
+    Card, CardContent, LinearProgress, Menu, MenuItem,
+    TextField, InputAdornment
 } from "@mui/material";
 import {
     AccountBalanceWallet, TrendingUp, SwapHoriz,
@@ -16,11 +15,11 @@ import {
     Receipt, Shield, Savings
 } from "@mui/icons-material";
 import { Drawer } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
 import { Squash as Hamburger } from "hamburger-react";
-import {runInContext as menuItems} from "lodash";
+import {logout} from "../features/authSlice.jsx";
+import {fetchDashboard} from "../features/accountSlice.jsx";
 
-// Charts
+// ─── Donut Chart ─────────────────────────────────────────────────
 const DonutChart = ({ categories }) => {
     if (!categories || categories.length === 0) {
         return (
@@ -46,7 +45,6 @@ const DonutChart = ({ categories }) => {
     const strokeWidth = 26;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
-
     let cumulative = 0;
 
     return (
@@ -57,14 +55,10 @@ const DonutChart = ({ categories }) => {
                         const value = cat.amount;
                         const percent = value / total;
                         const dash = percent * circumference;
-
                         const color = colors[cat.category.toUpperCase()] || "#64748B";
-
                         const strokeDasharray = `${dash} ${circumference}`;
                         const strokeDashoffset = -cumulative * circumference;
-
                         cumulative += percent;
-
                         return (
                             <circle
                                 key={i}
@@ -81,26 +75,11 @@ const DonutChart = ({ categories }) => {
                         );
                     })}
                 </g>
-
-                {/* Center Text */}
-                <text
-                    x="50%"
-                    y="50%"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize="14"
-                    fontWeight="700"
-                    fill="#111827"
-                >
+                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle"
+                      fontSize="14" fontWeight="700" fill="#111827">
                     ₹{total}
                 </text>
-                <text
-                    x="50%"
-                    y="60%"
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill="#9CA3AF"
-                >
+                <text x="50%" y="60%" textAnchor="middle" fontSize="10" fill="#9CA3AF">
                     Total
                 </text>
             </svg>
@@ -110,18 +89,13 @@ const DonutChart = ({ categories }) => {
                 {categories.map((cat, i) => {
                     const color = colors[cat.category.toUpperCase()] || "#64748B";
                     const percent = ((cat.amount / total) * 100).toFixed(1);
-
                     return (
                         <Box key={i} sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: color }} />
-                                <Typography sx={{ fontSize: 12, color: "#374151" }}>
-                                    {cat.category}
-                                </Typography>
+                                <Typography sx={{ fontSize: 12, color: "#374151" }}>{cat.category}</Typography>
                             </Box>
-                            <Typography sx={{ fontSize: 12, fontWeight: 600 }}>
-                                {percent}%
-                            </Typography>
+                            <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{percent}%</Typography>
                         </Box>
                     );
                 })}
@@ -129,45 +103,22 @@ const DonutChart = ({ categories }) => {
         </Box>
     );
 };
+
 // ─── Quick Action Button ─────────────────────────────────────────
 const ActionBtn = ({ icon: Icon, label, color = "#2563EB", bg = "#EFF6FF", onClick }) => (
     <Box
         onClick={onClick}
         sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 0.8,
-            cursor: "pointer",
-            p: 1.5,
-            borderRadius: 2,
-            minWidth: 64,
+            display: "flex", flexDirection: "column", alignItems: "center",
+            gap: 0.8, cursor: "pointer", p: 1.5, borderRadius: 2, minWidth: 64,
             transition: "all 0.18s",
             "&:hover": { bgcolor: "#F8FAFC", transform: "translateY(-2px)" }
         }}
     >
-        <Box
-            sx={{
-                width: 46,
-                height: 46,
-                borderRadius: 2,
-                bgcolor: bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-            }}
-        >
+        <Box sx={{ width: 46, height: 46, borderRadius: 2, bgcolor: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon sx={{ color, fontSize: 21 }} />
         </Box>
-
-        <Typography
-            sx={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: "#374151",
-                textAlign: "center"
-            }}
-        >
+        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#374151", textAlign: "center" }}>
             {label}
         </Typography>
     </Box>
@@ -196,105 +147,66 @@ const TxnRow = ({ icon: Icon, iconBg, iconColor, title, sub, amount, type, time 
 const getTxnMeta = (txn) => {
     const type = txn.type?.toUpperCase();
     const cat  = (txn.category || txn.description || "").toUpperCase();
-    if (type === "CREDIT")                                  return { icon: TrendingUp,   iconBg: "#ECFDF5", iconColor: "#10B981" };
-    if (cat.includes("LOAN") || cat.includes("EMI"))       return { icon: Savings,       iconBg: "#F5F3FF", iconColor: "#7C3AED" };
-    if (cat.includes("INSURANCE"))                         return { icon: Shield,         iconBg: "#ECFEFF", iconColor: "#0891B2" };
-    if (cat.includes("TRANSFER"))                          return { icon: SwapHoriz,      iconBg: "#EFF6FF", iconColor: "#2563EB" };
-    if (cat.includes("BILL"))                              return { icon: Receipt,        iconBg: "#FEF3C7", iconColor: "#D97706" };
-    return                                                        { icon: Receipt,        iconBg: "#EFF6FF", iconColor: "#2563EB" };
+    if (type === "CREDIT")                                 return { icon: TrendingUp, iconBg: "#ECFDF5", iconColor: "#10B981" };
+    if (cat.includes("LOAN") || cat.includes("EMI"))      return { icon: Savings,    iconBg: "#F5F3FF", iconColor: "#7C3AED" };
+    if (cat.includes("INSURANCE"))                        return { icon: Shield,      iconBg: "#ECFEFF", iconColor: "#0891B2" };
+    if (cat.includes("TRANSFER"))                         return { icon: SwapHoriz,   iconBg: "#EFF6FF", iconColor: "#2563EB" };
+    if (cat.includes("BILL"))                             return { icon: Receipt,     iconBg: "#FEF3C7", iconColor: "#D97706" };
+    return                                                       { icon: Receipt,     iconBg: "#EFF6FF", iconColor: "#2563EB" };
 };
 
 const kycColor = (s) => s === "APPROVED" ? "#10B981" : s === "PENDING" ? "#D97706" : "#EF4444";
 
 // ─── MAIN DASHBOARD ──────────────────────────────────────────────
 const CustomerDashboard = () => {
-    const [data, setData] = useState(null);
-    const [txns, setTxns] = useState([]);
-    const [analytics, setAnalytics] = useState(null);
-    const [loadError, setLoadError] = useState(false);
-    const [anchorEl, setAnchorEl] = useState(null);
+
+    // ✅ Redux — replaces all useState for data/loading/error
+    const dispatch = useDispatch();
+    const { data, loading: dashLoading, error: dashError } = useSelector((state) => state.account);
+
+    const [anchorEl,   setAnchorEl]   = useState(null);
+    const [menuOpen,   setMenuOpen]   = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+
     const navigate = useNavigate();
     const location = useLocation();
-    const [searchTerm, setSearchTerm] = useState("");
+
+    // ✅ Plain array — NOT imported from lodash or anywhere else
     const menuItems = [
-        { icon: ShowChart, label: "Dashboard", path: "/customer-dashboard" },
-        { icon: SwapHoriz, label: "Transactions", path: "/transactions" },
-        { icon: CreditCard, label: "Credit Cards", path: "/apply-credit-card" },
-        { icon: Receipt, label: "Payments", path: "/transfer" },
-        { icon: History, label: "Recent History", path: "/history" },
-        { icon: Savings, label: "Loan Application", path: "/apply-loan" }
+        { icon: ShowChart,  label: "Dashboard",        path: "/customer-dashboard" },
+        { icon: SwapHoriz,  label: "Transactions",     path: "/transactions" },
+        { icon: CreditCard, label: "Credit Cards",     path: "/apply-credit-card" },
+        { icon: Receipt,    label: "Payments",         path: "/transfer" },
+        { icon: History,    label: "Recent History",   path: "/history" },
+        { icon: Savings,    label: "Loan Application", path: "/apply-loan" },
     ];
-    const handleLogout = () => { logoutUser(); navigate("/customer-login"); };
+
+    const handleLogout = () => {
+        dispatch(logout());
+        logoutUser();
+        navigate("/customer-login");
+    };
+
     const processCategoryData = (analyticsData) => {
-        if (!analyticsData?.categoryBreakdown || analyticsData.categoryBreakdown.length === 0) {
-            return [];
-        }
+        if (!analyticsData?.categoryBreakdown || analyticsData.categoryBreakdown.length === 0) return [];
         return analyticsData.categoryBreakdown
             .filter(c => c?.amount > 0)
             .sort((a, b) => b.amount - a.amount);
     };
-    const processedCategories = processCategoryData(analytics);
-    const [menuOpen, setMenuOpen] = useState(false);
+
     const handleSearch = (e) => {
         if (e.key === "Enter" && searchTerm.trim()) {
             navigate(`/search?query=${searchTerm}`);
         }
     };
+
+    // ✅ Dispatch Redux thunk on mount — fetches dashboard + analytics + transactions
     useEffect(() => {
-        const init = async () => {
-            try {
-                const res = await getCustomerDashboard();
-                if (!res?.data) { setLoadError(true); return; }
+        dispatch(fetchDashboard());
+    }, [dispatch]);
 
-                setData(res.data);
-                const accNum = res.data?.accountNumber;
-
-                if (accNum) {
-                    try {
-                        const txRes = await getTransactions(accNum);
-                        if (!txRes?.error) setTxns((txRes.data?.transactions || []).slice(0, 4));
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-
-                const user = getUserFromToken();
-                const acc  = accNum || user?.accountNumber;
-                if (acc) {
-                    try {
-                        const now   = new Date();
-                        const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-                        const aRes  = await getAnalytics(acc, month);
-                        if (!aRes?.error) setAnalytics(aRes.data);
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-                setLoadError(true);
-            }
-        };
-        init().catch(console.error);
-    }, []);
-
-    // Error
-    if (loadError) return (
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", bgcolor: "#F8FAFC", flexDirection: "column", gap: 2 }}>
-            <Box sx={{ width: 56, height: 56, borderRadius: "50%", bgcolor: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <AccountBalance sx={{ color: "#EF4444", fontSize: 26 }} />
-            </Box>
-            <Typography sx={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>Failed to load dashboard</Typography>
-            <Typography sx={{ fontSize: 13, color: "#6B7280" }}>Please check your connection or login again.</Typography>
-            <Box onClick={() => { setLoadError(false); window.location.reload(); }}
-                 sx={{ cursor: "pointer", bgcolor: "#2563EB", color: "#fff", px: 3, py: 1, borderRadius: 2, fontSize: 13, fontWeight: 600 }}>
-                Retry
-            </Box>
-        </Box>
-    );
-
-    // Loading
-    if (!data) return (
+    // ─── Loading ──────────────────────────────────────────────────
+    if (dashLoading || !data) return (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", bgcolor: "#F8FAFC" }}>
             <Box sx={{ textAlign: "center" }}>
                 <Box sx={{ width: 48, height: 48, borderRadius: "50%", bgcolor: "#2563EB", mx: "auto", mb: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -306,9 +218,30 @@ const CustomerDashboard = () => {
         </Box>
     );
 
+    // ─── Error ────────────────────────────────────────────────────
+    if (dashError) return (
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", bgcolor: "#F8FAFC", flexDirection: "column", gap: 2 }}>
+            <Box sx={{ width: 56, height: 56, borderRadius: "50%", bgcolor: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <AccountBalance sx={{ color: "#EF4444", fontSize: 26 }} />
+            </Box>
+            <Typography sx={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>Failed to load dashboard</Typography>
+            <Typography sx={{ fontSize: 13, color: "#6B7280" }}>Please check your connection or login again.</Typography>
+            <Box onClick={() => dispatch(fetchDashboard())}
+                 sx={{ cursor: "pointer", bgcolor: "#2563EB", color: "#fff", px: 3, py: 1, borderRadius: 2, fontSize: 13, fontWeight: 600 }}>
+                Retry
+            </Box>
+        </Box>
+    );
+
+    // ✅ Read analytics + recent transactions from merged Redux state
+    const analytics           = data?.analytics || null;
+    const txns                = data?.recentTransactions || [];
+    const processedCategories = processCategoryData(analytics);
 
     return (
         <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#F1F5F9" }}>
+
+            {/* ══ MOBILE DRAWER ══════════════════════════════════════ */}
             <Drawer
                 anchor="left"
                 open={menuOpen}
@@ -316,65 +249,36 @@ const CustomerDashboard = () => {
                 sx={{ display: { xs: "block", md: "none" } }}
             >
                 <Box sx={{ width: 220, p: 2 }}>
-
-                    <Typography sx={{ fontWeight: "bold", mb: 2 }}>
-                        Menu
-                    </Typography>
-
+                    <Typography sx={{ fontWeight: "bold", mb: 2 }}>Menu</Typography>
                     {menuItems.map(({ icon: Icon, label, path }) => {
-
                         const isActive = location.pathname === path;
-
                         return (
                             <Box
                                 key={label}
-                                onClick={() => {
-                                    navigate(path);
-                                    setMenuOpen(false);
-                                }}
+                                onClick={() => { navigate(path); setMenuOpen(false); }}
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1.5,
-                                    p: 1,
-                                    borderRadius: 2,
-                                    cursor: "pointer",
-                                    mb: 1,
-
+                                    display: "flex", alignItems: "center", gap: 1.5,
+                                    p: 1, borderRadius: 2, cursor: "pointer", mb: 1,
                                     bgcolor: isActive ? "#E0F2FE" : "transparent",
                                     color: isActive ? "#2563EB" : "#000",
-
-                                    "&:hover": {
-                                        bgcolor: "#F1F5F9"
-                                    }
+                                    "&:hover": { bgcolor: "#F1F5F9" }
                                 }}
                             >
                                 <Icon sx={{ fontSize: 18 }} />
-                                <Typography sx={{ fontSize: 14 }}>
-                                    {label}
-                                </Typography>
+                                <Typography sx={{ fontSize: 14 }}>{label}</Typography>
                             </Box>
                         );
                     })}
-
-                    <Typography
-                        onClick={handleLogout}
-                        sx={{
-                            mt: 3,
-                            color: "red",
-                            cursor: "pointer"
-                        }}
-                    >
+                    <Typography onClick={handleLogout} sx={{ mt: 3, color: "red", cursor: "pointer" }}>
                         Logout
                     </Typography>
-
                 </Box>
             </Drawer>
-            {/* ══════════ SIDEBAR ══════════════════════════════════════ */}
+
+            {/* ══ SIDEBAR ════════════════════════════════════════════ */}
             <Box sx={{
                 display: { xs: "none", md: "flex" },
-                width: 210,
-                bgcolor: "#fff",
+                width: 210, bgcolor: "#fff",
                 borderRight: "1px solid #E5E7EB",
                 flexDirection: "column", py: 3, px: 2,
                 flexShrink: 0, position: "sticky", top: 0, height: "100vh"
@@ -386,26 +290,24 @@ const CustomerDashboard = () => {
                     <Typography sx={{ fontWeight: 800, fontSize: 14, color: "#111827", letterSpacing: -0.3 }}>UNION BANK</Typography>
                 </Box>
 
-                {[
-                    { icon: ShowChart,  label: "Dashboard",        active: true,  path: "/customer-dashboard" },
-                    { icon: SwapHoriz,  label: "Transactions",     active: false, path: "/transactions" },
-                    { icon: CreditCard, label: "Credit Cards",     active: false, path: "/apply-credit-card" },
-                    { icon: Receipt,    label: "Payments",         active: false, path: "/transfer" },
-                    { icon: History,    label: "Recent History",   active: false, path: "/history" },
-                    { icon: Savings,    label: "Loan Application", active: false, path: "/apply-loan" },
-                ].map(({ icon: Icon, label, active, path }) => (
-                    <Box key={label} onClick={() => navigate(path)} sx={{
-                        display: "flex", alignItems: "center", gap: 1.5,
-                        px: 1.5, py: 1.1, borderRadius: 1.5, mb: 0.4, cursor: "pointer",
-                        bgcolor: active ? "#EFF6FF" : "transparent",
-                        borderLeft: `3px solid ${active ? "#2563EB" : "transparent"}`,
-                        "&:hover": { bgcolor: active ? "#EFF6FF" : "#F8FAFC" },
-                        transition: "all 0.15s"
-                    }}>
-                        <Icon sx={{ fontSize: 17, color: active ? "#2563EB" : "#6B7280" }} />
-                        <Typography sx={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "#2563EB" : "#374151" }}>{label}</Typography>
-                    </Box>
-                ))}
+                {menuItems.map(({ icon: Icon, label, path }) => {
+                    const active = location.pathname === path;
+                    return (
+                        <Box key={label} onClick={() => navigate(path)} sx={{
+                            display: "flex", alignItems: "center", gap: 1.5,
+                            px: 1.5, py: 1.1, borderRadius: 1.5, mb: 0.4, cursor: "pointer",
+                            bgcolor: active ? "#EFF6FF" : "transparent",
+                            borderLeft: `3px solid ${active ? "#2563EB" : "transparent"}`,
+                            "&:hover": { bgcolor: active ? "#EFF6FF" : "#F8FAFC" },
+                            transition: "all 0.15s"
+                        }}>
+                            <Icon sx={{ fontSize: 17, color: active ? "#2563EB" : "#6B7280" }} />
+                            <Typography sx={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "#2563EB" : "#374151" }}>
+                                {label}
+                            </Typography>
+                        </Box>
+                    );
+                })}
 
                 <Box sx={{ flex: 1 }} />
                 <Box onClick={handleLogout} sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 1.5, py: 1.1, borderRadius: 1.5, cursor: "pointer", "&:hover": { bgcolor: "#FEF2F2" } }}>
@@ -414,40 +316,21 @@ const CustomerDashboard = () => {
                 </Box>
             </Box>
 
-            {/* ══════════ MAIN AREA ════════════════════════════════════ */}
+            {/* ══ MAIN AREA ══════════════════════════════════════════ */}
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
                 {/* TOP BAR */}
-                <Box
-                    sx={{
-                        bgcolor: "#fff",
-                        borderBottom: "1px solid #E5E7EB",
-                        display: "flex",
-                        alignItems: "center",
-                        px: 3,
-                        py: 1.5
-                    }}
-                >
+                <Box sx={{ bgcolor: "#fff", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", px: 3, py: 1.5 }}>
 
-                    {/* LEFT SIDE */}
+                    {/* LEFT */}
                     <Box sx={{ display: "flex", alignItems: "center", width: "25%" }}>
                         <Box sx={{ display: { xs: "block", md: "none" } }}>
-                            <Hamburger
-                                toggled={menuOpen}
-                                toggle={setMenuOpen}
-                                size={20}
-                            />
+                            <Hamburger toggled={menuOpen} toggle={setMenuOpen} size={20} />
                         </Box>
                     </Box>
 
-                    {/* CENTER SEARCH BAR */}
-                    <Box
-                        sx={{
-                            width: "50%",
-                            display: "flex",
-                            justifyContent: "center"
-                        }}
-                    >
+                    {/* CENTER SEARCH */}
+                    <Box sx={{ width: "50%", display: "flex", justifyContent: "center" }}>
                         <TextField
                             fullWidth
                             placeholder="Search payment, transfer, transaction..."
@@ -455,11 +338,7 @@ const CustomerDashboard = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onKeyDown={handleSearch}
                             size="small"
-                            sx={{
-                                maxWidth: 400,
-                                bgcolor: "#F8FAFC",
-                                borderRadius: 2
-                            }}
+                            sx={{ maxWidth: 400, bgcolor: "#F8FAFC", borderRadius: 2 }}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
@@ -470,73 +349,37 @@ const CustomerDashboard = () => {
                         />
                     </Box>
 
-                    {/* RIGHT SIDE */}
-                    <Box
-                        sx={{
-                            width: "25%",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            alignItems: "center",
-                            gap: 1.5
-                        }}
-                    >
-                        <IconButton
-                            size="small"
-                            sx={{ bgcolor: "#F8FAFC", border: "1px solid #E5E7EB" }}
-                        >
+                    {/* RIGHT */}
+                    <Box sx={{ width: "25%", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1.5 }}>
+                        <IconButton size="small" sx={{ bgcolor: "#F8FAFC", border: "1px solid #E5E7EB" }}>
                             <Notifications sx={{ fontSize: 18, color: "#374151" }} />
                         </IconButton>
-
                         <Box
                             sx={{ display: "flex", alignItems: "center", gap: 1.2, cursor: "pointer" }}
                             onClick={(e) => setAnchorEl(e.currentTarget)}
                         >
-                            <Avatar
-                                sx={{
-                                    width: 33,
-                                    height: 33,
-                                    bgcolor: "#2563EB",
-                                    fontSize: 13,
-                                    fontWeight: 700
-                                }}
-                            >
+                            <Avatar sx={{ width: 33, height: 33, bgcolor: "#2563EB", fontSize: 13, fontWeight: 700 }}>
                                 {data?.customerName?.charAt(0)}
                             </Avatar>
-
                             <Box>
-                                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>
-                                    {data?.customerName}
-                                </Typography>
-
+                                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{data?.customerName}</Typography>
                                 <Typography sx={{ fontSize: 11, color: "#6B7280" }}>
-                                    {data.accountType?.split(" ")[0] || "SAVINGS"}
+                                    {data?.accountType?.split(" ")[0] || "SAVINGS"}
                                 </Typography>
                             </Box>
                         </Box>
                     </Box>
 
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={() => setAnchorEl(null)}
-                    >
-                        <MenuItem
-                            onClick={handleLogout}
-                            sx={{ fontSize: 13, color: "#EF4444" }}
-                        >
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+                        <MenuItem onClick={handleLogout} sx={{ fontSize: 13, color: "#EF4444" }}>
                             <Logout sx={{ fontSize: 15, mr: 1 }} /> Logout
                         </MenuItem>
                     </Menu>
-
                 </Box>
 
                 {/* PAGE CONTENT */}
                 <Box sx={{ flex: 1, overflow: "auto", p: 2.5 }}>
-                    <Box sx={{ display: "grid", gridTemplateColumns: {
-                            xs: "1fr",
-                            md: "1fr",
-                            lg: "1fr 320px"
-                        }, gap: 2.5, maxWidth: 1280, mx: "auto" }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr", lg: "1fr 320px" }, gap: 2.5, maxWidth: 1280, mx: "auto" }}>
 
                         {/* ════ LEFT COLUMN ════════════════════════════════ */}
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
@@ -546,16 +389,13 @@ const CustomerDashboard = () => {
                                 <CardContent sx={{ p: 0 }}>
                                     <Box sx={{ display: { xs: "block", md: "flex" } }}>
 
-                                        {/* Balance + Analytics chart */}
+                                        {/* Balance + Chart */}
                                         <Box sx={{ flex: 1, p: 2.5, borderRight: "1px solid #F3F4F6" }}>
-                                            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-
-                                            </Box>
                                             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
                                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                     <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Accounts</Typography>
                                                     <Chip
-                                                        label={data.accountType?.toUpperCase().split(" ")[0] || "SAVINGS"}
+                                                        label={data?.accountType?.toUpperCase().split(" ")[0] || "SAVINGS"}
                                                         size="small"
                                                         sx={{ fontSize: 10, height: 19, bgcolor: "#EFF6FF", color: "#2563EB", fontWeight: 700 }}
                                                     />
@@ -570,31 +410,18 @@ const CustomerDashboard = () => {
                                                 Account: {data?.accountNumber}
                                             </Typography>
 
-                                            {/* Real analytics bar chart for current month */}
                                             {analytics?.categoryBreakdown?.length > 0 ? (
                                                 <Box>
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: 11,
-                                                            fontWeight: 600,
-                                                            color: "#9CA3AF",
-                                                            mb: 1,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: 0.4
-                                                        }}
-                                                    >
+                                                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", mb: 1, textTransform: "uppercase", letterSpacing: 0.4 }}>
                                                         Category Spending — This Month
                                                     </Typography>
-
                                                     {processedCategories.length > 0 ? (
                                                         <Box sx={{ display: "flex", justifyContent: "center" }}>
                                                             <DonutChart categories={processedCategories} />
                                                         </Box>
                                                     ) : (
                                                         <Box sx={{ bgcolor: "#F8FAFC", borderRadius: 2, p: 2, textAlign: "center" }}>
-                                                            <Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>
-                                                                No spending data this month yet
-                                                            </Typography>
+                                                            <Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>No spending data this month yet</Typography>
                                                         </Box>
                                                     )}
                                                 </Box>
@@ -614,17 +441,17 @@ const CustomerDashboard = () => {
                                             </Box>
                                         </Box>
 
-                                        {/* Overview KPIs — real data only */}
+                                        {/* Overview KPIs */}
                                         <Box sx={{ width: 190, p: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
                                             <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>Overview</Typography>
 
                                             {analytics?.summary ? (
                                                 <>
                                                     {[
-                                                        { label: "Total Debit",   value: `₹${analytics.summary.totalDebit}`,   icon: ArrowDownward, color: "#EF4444", bg: "#FEF2F2" },
-                                                        { label: "Total Credit",  value: `₹${analytics.summary.totalCredit}`,  icon: ArrowUpward,   color: "#10B981", bg: "#ECFDF5" },
-                                                        { label: "Net Flow",      value: `₹${analytics.summary.netFlow}`,      icon: SwapHoriz,     color: analytics.summary.netFlow >= 0 ? "#10B981" : "#EF4444", bg: "#EFF6FF" },
-                                                        { label: "Transactions",  value: analytics.summary.transactionCount,   icon: Receipt,       color: "#7C3AED", bg: "#F5F3FF" },
+                                                        { label: "Total Debit",  value: `₹${analytics.summary.totalDebit}`,  icon: ArrowDownward, color: "#EF4444", bg: "#FEF2F2" },
+                                                        { label: "Total Credit", value: `₹${analytics.summary.totalCredit}`, icon: ArrowUpward,   color: "#10B981", bg: "#ECFDF5" },
+                                                        { label: "Net Flow",     value: `₹${analytics.summary.netFlow}`,     icon: SwapHoriz,     color: analytics.summary.netFlow >= 0 ? "#10B981" : "#EF4444", bg: "#EFF6FF" },
+                                                        { label: "Transactions", value: analytics.summary.transactionCount,  icon: Receipt,       color: "#7C3AED", bg: "#F5F3FF" },
                                                     ].map(({ label, value, icon: Icon, color, bg }) => (
                                                         <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                                                             <Box sx={{ width: 30, height: 30, borderRadius: 1.5, bgcolor: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -641,83 +468,27 @@ const CustomerDashboard = () => {
                                                 <Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>No analytics yet this month</Typography>
                                             )}
 
-                                            {/* Always-available fields from dashboard API */}
+                                            {/* KYC */}
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                                <Box
-                                                    sx={{
-                                                        width: 30,
-                                                        height: 30,
-                                                        borderRadius: 1.5,
-                                                        bgcolor: "#ECFDF5",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center"
-                                                    }}
-                                                >
+                                                <Box sx={{ width: 30, height: 30, borderRadius: 1.5, bgcolor: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                     <Shield sx={{ fontSize: 14, color: "#10B981" }} />
                                                 </Box>
-
                                                 <Box>
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: 10,
-                                                            color: "#9CA3AF",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: 0.3
-                                                        }}
-                                                    >
-                                                        KYC Status
-                                                    </Typography>
-
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: 12,
-                                                            fontWeight: 700,
-                                                            color: kycColor(data?.kyc?.status)
-                                                        }}
-                                                    >
+                                                    <Typography sx={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>KYC Status</Typography>
+                                                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: kycColor(data?.kyc?.status) }}>
                                                         {data?.kyc?.status}
                                                     </Typography>
                                                 </Box>
                                             </Box>
 
+                                            {/* Debit Card */}
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                                <Box
-                                                    sx={{
-                                                        width: 30,
-                                                        height: 30,
-                                                        borderRadius: 1.5,
-                                                        bgcolor: "#F5F3FF",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center"
-                                                    }}
-                                                >
+                                                <Box sx={{ width: 30, height: 30, borderRadius: 1.5, bgcolor: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                     <CreditCard sx={{ fontSize: 14, color: "#7C3AED" }} />
                                                 </Box>
-
                                                 <Box sx={{ minWidth: 0 }}>
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: 10,
-                                                            color: "#9CA3AF",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: 0.3
-                                                        }}
-                                                    >
-                                                        Debit Card
-                                                    </Typography>
-
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: 11,
-                                                            fontWeight: 700,
-                                                            color: "#111827"
-                                                        }}
-                                                        noWrap
-                                                    >
+                                                    <Typography sx={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>Debit Card</Typography>
+                                                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#111827" }} noWrap>
                                                         {data?.debitCard?.cardNumber}
                                                     </Typography>
                                                 </Box>
@@ -739,19 +510,13 @@ const CustomerDashboard = () => {
                                         <ActionBtn icon={Analytics}            label="Analytics"     color="#10B981" bg="#ECFDF5"  onClick={() => navigate("/analytics")} />
                                         <ActionBtn icon={CreditCard}           label="Credit Card"   color="#DC2626" bg="#FEF2F2"  onClick={() => navigate("/apply-credit-card")} />
                                         <ActionBtn icon={Savings}              label="Apply Loan"    color="#7C3AED" bg="#F5F3FF"  onClick={() => navigate("/apply-loan")} />
-                                        <ActionBtn
-                                            icon={Settings}
-                                            label="Limits"
-                                            color="#2563EB"
-                                            bg="#EFF6FF"
-                                            onClick={() => navigate("/limits")}
-                                        />
+                                        <ActionBtn icon={Settings}             label="Limits"        color="#2563EB" bg="#EFF6FF"  onClick={() => navigate("/limits")} />
                                         <ActionBtn icon={Shield}               label="Insurance"     color="#0891B2" bg="#ECFEFF"  onClick={() => navigate("/apply-insurance")} />
                                     </Box>
                                 </CardContent>
                             </Card>
 
-                            {/* TRANSACTION HISTORY — real API */}
+                            {/* TRANSACTION HISTORY */}
                             <Card sx={{ borderRadius: 3, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", border: "1px solid #E5E7EB" }}>
                                 <CardContent sx={{ p: 2.5 }}>
                                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -761,7 +526,8 @@ const CustomerDashboard = () => {
                                         </Typography>
                                     </Box>
 
-                                    {Array.isArray(txns) && txns.length > 0 ? (                                        txns.map((t, i) => {
+                                    {Array.isArray(txns) && txns.length > 0 ? (
+                                        txns.map((t, i) => {
                                             const meta = getTxnMeta(t);
                                             return (
                                                 <TxnRow
@@ -825,8 +591,6 @@ const CustomerDashboard = () => {
                                                     </Box>
                                                 </Box>
                                             </Box>
-
-                                            {/* Only real fields returned by API */}
                                             {[
                                                 { label: "Available Credit",    value: data.creditCard.availableCredit    != null ? `₹${data.creditCard.availableCredit}`    : null },
                                                 { label: "Credit Limit",        value: data.creditCard.creditLimit        != null ? `₹${data.creditCard.creditLimit}`        : null },
@@ -845,7 +609,7 @@ const CustomerDashboard = () => {
                                             <Typography sx={{ fontSize: 13, color: "#6B7280", mb: 1.5 }}>
                                                 {data.creditCard?.message ||
                                                     (data.creditCard?.status === "PENDING_APPROVAL" ? "Application under review" :
-                                                        data.creditCard?.status === "REJECTED"         ? "Application rejected" :
+                                                        data.creditCard?.status === "REJECTED" ? "Application rejected" :
                                                             "No credit card applied")}
                                             </Typography>
                                             {data.creditCard?.status === "PENDING_APPROVAL" && (

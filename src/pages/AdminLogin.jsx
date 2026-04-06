@@ -37,8 +37,6 @@ const AdminLogin = () => {
             setToken(token);
 
             console.log("✅ Login success");
-
-            // ✅ IMPORTANT: delay navigation slightly (ensures token is saved)
             setTimeout(() => {
                 navigate("/dashboard", { replace: true });
             }, 100);

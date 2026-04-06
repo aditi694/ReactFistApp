@@ -29,7 +29,6 @@ export const getUserFromToken = () => {
             email: payload.email,
             fullName: payload.fullName || payload.name,
 
-            // ✅ ONLY FROM TOKEN (NO localStorage)
             accountNumber: payload.accountNumber || null,
 
             isAdmin,
@@ -54,9 +53,7 @@ export const isAuthenticated = () => {
  */
 export const getUserRole = () => {
     const user = getUserFromToken();
-
     if (!user) return null;
-
     return user.isAdmin ? "ADMIN" : "CUSTOMER";
 };
 
@@ -64,7 +61,7 @@ export const getUserRole = () => {
  * Logout user
  */
 export const logoutUser = () => {
-    localStorage.clear();   // ✅ clears old account also
+    localStorage.clear();
     sessionStorage.clear();
     console.log("✅ Logged out clean");
 };

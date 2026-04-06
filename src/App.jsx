@@ -32,7 +32,7 @@ function App() {
                 <Route
                     path="/dashboard"
                     element={
-                        <ProtectedRoute role="ADMIN" redirectTo="/admin-login">
+                        <ProtectedRoute role="ADMIN" redirectTo="/login">
                             <AdminDashboard />
                         </ProtectedRoute>
                     }

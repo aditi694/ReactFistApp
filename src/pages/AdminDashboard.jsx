@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
     getAllCustomers,
     updateKyc,
@@ -52,19 +51,16 @@ const AdminDashboard = () => {
             getPendingBeneficiaries()
         ]);
 
-        const cust = custRes?.data || [];
+        const cust      = custRes?.data || [];
         const loansData = loanRes?.data?.loans || [];
         const cardsData = cardRes?.data?.requests || [];
-        const benCount = benRes?.data?.length || 0;
+        const benCount  = benRes?.data?.length || 0;
 
         setCustomers(cust);
         setFilteredCustomers(cust);
         setLoans(loansData);
         setCards(cardsData);
-
-        setPendingCount(
-            loansData.length + cardsData.length + benCount
-        );
+        setPendingCount(loansData.length + cardsData.length + benCount);
     };
 
     useEffect(() => {
@@ -85,6 +81,41 @@ const AdminDashboard = () => {
         return { loan, card };
     };
 
+    const handleUpdateKyc = async (id, status) => {
+        await updateKyc(id, status);
+        fetchAll();
+    };
+
+    const handleBlock = async (id, reason = "Blocked by admin") => {
+        await blockCustomer(id, reason);
+        fetchAll();
+    };
+
+    const handleUnblock = async (id) => {
+        await unblockCustomer(id);
+        fetchAll();
+    };
+
+    const handleApproveLoan = async (loanId) => {
+        await approveLoan(loanId);
+        fetchAll();
+    };
+
+    const handleRejectLoan = async (loanId) => {
+        await rejectLoan(loanId);
+        fetchAll();
+    };
+
+    const handleApproveCard = async (id) => {
+        await approveCard(id);
+        fetchAll();
+    };
+
+    const handleRejectCard = async (id) => {
+        await rejectCard(id);
+        fetchAll();
+    };
+
     return (
         <Container maxWidth="xl" sx={{ mt: 4 }}>
 
@@ -92,15 +123,10 @@ const AdminDashboard = () => {
             <Card sx={{ p: 3, mb: 3, borderRadius: 3 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Box>
-                        <Typography variant="h4" fontWeight={700}>
-                            Admin Dashboard
-                        </Typography>
-                        <Typography color="text.secondary">
-                            Banking Control Panel
-                        </Typography>
+                        <Typography variant="h4" fontWeight={700}>Admin Dashboard</Typography>
+                        <Typography color="text.secondary">Banking Control Panel</Typography>
                     </Box>
 
-                    {/* 🔔 NOTIFICATION BUTTON */}
                     <Box sx={{ display: "flex", gap: 2 }}>
                         <IconButton onClick={() => navigate("/admin/pending")}>
                             <Badge badgeContent={pendingCount} color="error">
@@ -111,10 +137,7 @@ const AdminDashboard = () => {
                         <Button
                             variant="contained"
                             color="error"
-                            onClick={() => {
-                                logoutUser();
-                                navigate("/login");
-                            }}
+                            onClick={() => { logoutUser(); navigate("/login"); }}
                         >
                             Logout
                         </Button>
@@ -155,7 +178,7 @@ const AdminDashboard = () => {
                     <TableBody>
                         {filteredCustomers.map((c) => {
                             const isOpen = expanded[c.customerId];
-                            const meta = getMeta(c);
+                            const meta   = getMeta(c);
 
                             return (
                                 <>
@@ -168,7 +191,7 @@ const AdminDashboard = () => {
                                         </TableCell>
 
                                         <TableCell>
-                                            <Box sx={{ display: "flex", gap: 2 }}>
+                                            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                                                 <Avatar sx={{ bgcolor: "#2563EB" }}>
                                                     {c.fullName?.charAt(0)}
                                                 </Avatar>
@@ -194,8 +217,8 @@ const AdminDashboard = () => {
                                         </TableCell>
                                     </TableRow>
 
-                                    {/* EXPANDED */}
-                                    <TableRow>
+                                    {/* EXPANDED ROW */}
+                                    <TableRow key={`${c.customerId}-expanded`}>
                                         <TableCell colSpan={6} sx={{ p: 0 }}>
                                             <Collapse in={isOpen}>
                                                 <Box sx={{ p: 3, bgcolor: "#F8FAFC" }}>
@@ -203,9 +226,7 @@ const AdminDashboard = () => {
 
                                                         {/* CREATED */}
                                                         <Grid item xs={12}>
-                                                            <Typography fontSize={12} color="gray">
-                                                                Created At:
-                                                            </Typography>
+                                                            <Typography fontSize={12} color="gray">Created At:</Typography>
                                                             <Typography fontWeight={600}>
                                                                 {new Date(c.createdAt).toLocaleDateString("en-IN")}
                                                             </Typography>
@@ -218,18 +239,17 @@ const AdminDashboard = () => {
                                                                     variant="contained"
                                                                     color="success"
                                                                     startIcon={<CheckCircle />}
-                                                                    onClick={() => updateKyc(c.customerId, "APPROVED")}
+                                                                    onClick={() => handleUpdateKyc(c.customerId, "APPROVED")}
                                                                 >
                                                                     Approve KYC
                                                                 </Button>
-
                                                                 <Button
                                                                     variant="contained"
                                                                     color="error"
                                                                     sx={{ ml: 1 }}
-                                                                    onClick={() => updateKyc(c.customerId, "REJECTED")}
+                                                                    onClick={() => handleUpdateKyc(c.customerId, "REJECTED")}
                                                                 >
-                                                                    Reject
+                                                                    Reject KYC
                                                                 </Button>
                                                             </Grid>
                                                         )}
@@ -238,14 +258,17 @@ const AdminDashboard = () => {
                                                         {meta.loan && (
                                                             <Grid item>
                                                                 <Button
+                                                                    variant="contained"
                                                                     color="success"
-                                                                    onClick={() => approveLoan(meta.loan.loanId)}
+                                                                    onClick={() => handleApproveLoan(meta.loan.loanId)}
                                                                 >
                                                                     Approve Loan
                                                                 </Button>
                                                                 <Button
+                                                                    variant="contained"
                                                                     color="error"
-                                                                    onClick={() => rejectLoan(meta.loan.loanId)}
+                                                                    sx={{ ml: 1 }}
+                                                                    onClick={() => handleRejectLoan(meta.loan.loanId)}
                                                                 >
                                                                     Reject Loan
                                                                 </Button>
@@ -256,35 +279,38 @@ const AdminDashboard = () => {
                                                         {meta.card && (
                                                             <Grid item>
                                                                 <Button
+                                                                    variant="contained"
                                                                     color="success"
-                                                                    onClick={() => approveCard(meta.card.id)}
+                                                                    onClick={() => handleApproveCard(meta.card.id)}
                                                                 >
                                                                     Approve Card
                                                                 </Button>
                                                                 <Button
+                                                                    variant="contained"
                                                                     color="error"
-                                                                    onClick={() => rejectCard(meta.card.id)}
+                                                                    sx={{ ml: 1 }}
+                                                                    onClick={() => handleRejectCard(meta.card.id)}
                                                                 >
                                                                     Reject Card
                                                                 </Button>
                                                             </Grid>
                                                         )}
 
-                                                        {/* BLOCK */}
+                                                        {/* BLOCK / UNBLOCK */}
                                                         <Grid item>
                                                             {c.status === "ACTIVE" ? (
                                                                 <Button
                                                                     variant="outlined"
                                                                     color="warning"
                                                                     startIcon={<Block />}
-                                                                    onClick={() => blockCustomer(c.customerId)}
+                                                                    onClick={() => handleBlock(c.customerId)}
                                                                 >
                                                                     Block Customer
                                                                 </Button>
                                                             ) : (
                                                                 <Button
                                                                     variant="contained"
-                                                                    onClick={() => unblockCustomer(c.customerId)}
+                                                                    onClick={() => handleUnblock(c.customerId)}
                                                                 >
                                                                     Unblock
                                                                 </Button>

@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { customerLogin } from "../api/authApi";
-import { setToken } from "../utils/auth";
-
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../features/authSlice";
 import {
     Box,
     TextField,
@@ -10,16 +9,23 @@ import {
     Typography,
     Paper,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    CircularProgress
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const CustomerLogin = () => {
-    const [form, setForm] = useState({ accountNumber: "", password: "" });
-    const [error, setError] = useState("");
-    const [showPassword, setShowPassword] = useState(false); // ✅ NEW
+    const [form, setForm] = useState({
+        accountNumber: "",
+        password: ""
+    });
 
+    const [showPassword, setShowPassword] = useState(false);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { loading, error, isAuthenticated } = useSelector(
+        (state) => state.auth
+    );
 
     const handleChange = (e) => {
         setForm({
@@ -28,18 +34,16 @@ const CustomerLogin = () => {
         });
     };
 
-    const handleLogin = async (e) => {
+    const handleLogin = (e) => {
         e.preventDefault();
-
-        try {
-            const res = await customerLogin(form.accountNumber, form.password);
-            const token = res.data.token;
-            setToken(token);
-            navigate("/customer-dashboard");
-        } catch {
-            setError("Invalid credentials");
-        }
+        dispatch(loginUser(form));
     };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate("/customer-dashboard");
+        }
+    }, [isAuthenticated, navigate]);
 
     return (
         <Box
@@ -56,6 +60,7 @@ const CustomerLogin = () => {
                     Customer Login
                 </Typography>
 
+                {/* ✅ Error from Redux */}
                 {error && (
                     <Typography color="error" sx={{ mb: 2 }}>
                         {error}
@@ -70,7 +75,6 @@ const CustomerLogin = () => {
                         margin="normal"
                         value={form.accountNumber}
                         onChange={handleChange}
-                        inputProps={{ spellCheck: false }}
                     />
 
                     <TextField
@@ -85,9 +89,15 @@ const CustomerLogin = () => {
                             endAdornment: (
                                 <InputAdornment position="end">
                                     <IconButton
-                                        onClick={() => setShowPassword(!showPassword)}
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
                                     >
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        {showPassword ? (
+                                            <VisibilityOff />
+                                        ) : (
+                                            <Visibility />
+                                        )}
                                     </IconButton>
                                 </InputAdornment>
                             )
@@ -99,8 +109,13 @@ const CustomerLogin = () => {
                         variant="contained"
                         type="submit"
                         sx={{ mt: 2 }}
+                        disabled={loading}
                     >
-                        Login
+                        {loading ? (
+                            <CircularProgress size={20} color="inherit" />
+                        ) : (
+                            "Login"
+                        )}
                     </Button>
                 </form>
             </Paper>
