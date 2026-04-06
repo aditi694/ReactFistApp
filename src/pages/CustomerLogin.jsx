@@ -13,6 +13,7 @@ import {
     CircularProgress
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {getUserRole} from "../utils/auth.js";
 
 const CustomerLogin = () => {
     const [form, setForm] = useState({
@@ -36,14 +37,19 @@ const CustomerLogin = () => {
 
     const handleLogin = (e) => {
         e.preventDefault();
+        if (loading) return;
+        localStorage.removeItem("token");
         dispatch(loginUser(form));
     };
 
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate("/customer-dashboard");
+        if (isAuthenticated && !loading) {
+            const role = getUserRole();
+            if (role === "CUSTOMER") {
+                navigate("/customer-dashboard", { replace: true });
+            }
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, loading]);
 
     return (
         <Box
@@ -60,7 +66,6 @@ const CustomerLogin = () => {
                     Customer Login
                 </Typography>
 
-                {/* ✅ Error from Redux */}
                 {error && (
                     <Typography color="error" sx={{ mb: 2 }}>
                         {error}
