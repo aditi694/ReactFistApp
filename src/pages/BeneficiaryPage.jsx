@@ -9,13 +9,6 @@ import {
     CircularProgress,
     Alert
 } from "@mui/material";
-
-import {
-    validateAccount,
-    validateIFSC,
-    validateName
-} from "../utils/validation";
-
 import {
     addBeneficiary,
     getBeneficiaries
@@ -23,9 +16,6 @@ import {
 
 import { getUserFromToken, getAccountNumberFromAPI } from "../utils/auth";
 
-/**
- * Normalize API response array
- */
 const getBeneficiaryList = (payload) => {
     if (Array.isArray(payload)) return payload;
     if (Array.isArray(payload?.content)) return payload.content;
@@ -33,9 +23,6 @@ const getBeneficiaryList = (payload) => {
     return [];
 };
 
-/**
- * Normalize beneficiary object to consistent shape
- */
 const normalizeBeneficiary = (beneficiary, index) => ({
     beneficiaryId: beneficiary?.beneficiaryId ?? beneficiary?.id ?? `ben-${index}`,
     beneficiaryName: beneficiary?.beneficiaryName ?? beneficiary?.name ?? "Unnamed",
@@ -49,28 +36,20 @@ const normalizeBeneficiary = (beneficiary, index) => ({
 });
 
 const BeneficiaryPage = () => {
-    // Form fields
     const [accountNumber, setAccountNumber] = useState("");
     const [name, setName] = useState("");
     const [account, setAccount] = useState("");
     const [ifsc, setIfsc] = useState("");
 
-    // List & messages
     const [list, setList] = useState([]);
     const [message, setMessage] = useState("");
     const [error, setError] = useState(false);
 
-    // Loading states
     const [loading, setLoading] = useState(false);
     const [listLoading, setListLoading] = useState(false);
     const [initLoading, setInitLoading] = useState(true); // Initial load
 
-    // Get user from token
     const user = getUserFromToken();
-
-    /**
-     * Fetch beneficiaries for current customer
-     */
     const fetchData = async () => {
         setListLoading(true);
         setMessage("");
@@ -78,7 +57,6 @@ const BeneficiaryPage = () => {
         const res = await getBeneficiaries();
 
         if (!res?.error) {
-            // Parse response and normalize
             const beneficiaries = getBeneficiaryList(res?.data)
                 .map((b, idx) => normalizeBeneficiary(b, idx));
 
@@ -94,9 +72,6 @@ const BeneficiaryPage = () => {
         setListLoading(false);
     };
 
-    /**
-     * Initialize on mount - fetch account number from API if needed
-     */
     useEffect(() => {
         const initializePage = async () => {
             setInitLoading(true);
@@ -108,8 +83,6 @@ const BeneficiaryPage = () => {
                 setInitLoading(false);
                 return;
             }
-
-            // Try to get account number from token first, then from API
             let accountNum = user.accountNumber;
 
             if (!accountNum) {
@@ -125,22 +98,15 @@ const BeneficiaryPage = () => {
                 return;
             }
 
-            // Set account number from token or API
             setAccountNumber(accountNum);
             console.log("✅ Account number set:", accountNum);
-
-            // Fetch beneficiaries
             await fetchData();
-
             setInitLoading(false);
         };
 
         initializePage();
     }, []);
 
-    /**
-     * Handle add beneficiary
-     */
     const handleAdd = async () => {
         setMessage("");
         setError(false);
@@ -155,14 +121,12 @@ const BeneficiaryPage = () => {
             return;
         }
 
-        // 🚫 prevent self account
         if (trimmedAccount === accountNumber) {
             setMessage("You cannot add your own account");
             setError(true);
             return;
         }
 
-        // ✅ simple validation
         if (!trimmedName || trimmedName.length < 2) {
             setMessage("Invalid name");
             setError(true);
@@ -205,7 +169,7 @@ const BeneficiaryPage = () => {
             return;
         }
 
-        setMessage("✅ Beneficiary added successfully");
+        setMessage(" Beneficiary added successfully");
         setError(false);
 
         setName("");
@@ -215,7 +179,6 @@ const BeneficiaryPage = () => {
         await fetchData();
     };
 
-    // Show loading spinner during initialization
     if (initLoading) {
         return (
             <Box sx={{ maxWidth: 600, mx: "auto", mt: 4, textAlign: "center" }}>
