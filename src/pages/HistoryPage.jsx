@@ -10,7 +10,7 @@ import {
     Grid
 } from "@mui/material";
 
-import { getTransactions } from "../api/transactionApi";
+import { getTransactions, downloadTransactionsPdf } from "../api/transactionApi";
 import { getAccountNumber } from "../utils/accountHelper";
 
 const HistoryPage = () => {
@@ -23,7 +23,10 @@ const HistoryPage = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
 
-    // ✅ AUTO LOAD ACCOUNT
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const [downloading, setDownloading] = useState(false);
+
     useEffect(() => {
         const load = async () => {
             const acc = await getAccountNumber();
@@ -33,7 +36,6 @@ const HistoryPage = () => {
     }, []);
 
     const fetchHistory = async (pageNumber = 1) => {
-
         if (!accountNumber) {
             setMessage("Account not loaded yet");
             return;
@@ -42,8 +44,7 @@ const HistoryPage = () => {
         setLoading(true);
         setMessage("");
 
-        const res = await getTransactions(accountNumber);
-
+        const res = await getTransactions(accountNumber, pageNumber);
         setLoading(false);
 
         if (res?.error) {
@@ -61,26 +62,37 @@ const HistoryPage = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case "SUCCESS":
-                return "success.main";
+                return "#2e7d32";
             case "FAILED":
-                return "error.main";
+                return "#d32f2f";
             case "PENDING":
             case "IN_PROGRESS":
-                return "warning.main";
+                return "#ed6c02";
             default:
-                return "text.primary";
+                return "#000";
         }
     };
 
+    const handleDownloadPdf = async () => {
+        if (!accountNumber || !fromDate || !toDate) {
+            setMessage("Please select date range");
+            return;
+        }
+
+        setDownloading(true);
+        await downloadTransactionsPdf(accountNumber, fromDate, toDate);
+        setDownloading(false);
+    };
+
     return (
-        <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
+        <Box sx={{ maxWidth: 900, mx: "auto", mt: 4 }}>
 
             {/* HEADER */}
-            <Typography variant="h4" gutterBottom>
-                Transaction History
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+                🏦 Transaction History
             </Typography>
 
-            {/* ACCOUNT (AUTO) */}
+            {/* ACCOUNT + FETCH */}
             <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
                     fullWidth
@@ -95,6 +107,49 @@ const HistoryPage = () => {
                     disabled={!accountNumber || loading}
                 >
                     {loading ? <CircularProgress size={24} /> : "Fetch"}
+                </Button>
+            </Box>
+
+            {/* FILTER SECTION */}
+            <Box sx={{
+                display: "flex",
+                gap: 2,
+                mt: 2,
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: "#f5f7fa",
+                boxShadow: 1
+            }}>
+                <TextField
+                    type="date"
+                    label="From"
+                    InputLabelProps={{ shrink: true }}
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    fullWidth
+                />
+
+                <TextField
+                    type="date"
+                    label="To"
+                    InputLabelProps={{ shrink: true }}
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    fullWidth
+                />
+
+                <Button
+                    variant="contained"
+                    sx={{
+                        background: "linear-gradient(45deg, #6a11cb, #2575fc)",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        px: 3
+                    }}
+                    onClick={handleDownloadPdf}
+                    disabled={!accountNumber || downloading}
+                >
+                    {downloading ? "Downloading..." : "📄 PDF"}
                 </Button>
             </Box>
 
@@ -119,11 +174,16 @@ const HistoryPage = () => {
                 </Typography>
             )}
 
-            {/* LIST */}
+            {/* TRANSACTION LIST */}
             <Grid container spacing={2} sx={{ mt: 2 }}>
                 {list.map((t) => (
                     <Grid size={12} key={t.transactionId}>
-                        <Card>
+                        <Card sx={{
+                            borderRadius: 3,
+                            boxShadow: 3,
+                            transition: "0.3s",
+                            "&:hover": { transform: "scale(1.02)" }
+                        }}>
                             <CardContent>
 
                                 <Box display="flex" justifyContent="space-between">
@@ -133,6 +193,15 @@ const HistoryPage = () => {
 
                                     <Typography
                                         sx={{
+                                            px: 2,
+                                            py: 0.5,
+                                            borderRadius: "20px",
+                                            backgroundColor:
+                                                t.status === "SUCCESS"
+                                                    ? "#e8f5e9"
+                                                    : t.status === "FAILED"
+                                                        ? "#ffebee"
+                                                        : "#fff3e0",
                                             color: getStatusColor(t.status),
                                             fontWeight: "bold"
                                         }}
@@ -145,7 +214,7 @@ const HistoryPage = () => {
                                     {t.description || "No description"}
                                 </Typography>
 
-                                <Typography sx={{ mt: 1 }}>
+                                <Typography sx={{ mt: 1, color: "#555" }}>
                                     {t.date} • {t.time}
                                 </Typography>
 
@@ -153,9 +222,10 @@ const HistoryPage = () => {
                                     sx={{
                                         mt: 1,
                                         fontWeight: "bold",
+                                        fontSize: "18px",
                                         color: t.type === "DEBIT"
-                                            ? "error.main"
-                                            : "success.main"
+                                            ? "#d32f2f"
+                                            : "#2e7d32"
                                     }}
                                 >
                                     {t.amount}

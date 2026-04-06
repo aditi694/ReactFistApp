@@ -1,26 +1,21 @@
 import { Navigate } from "react-router-dom";
 import { isAuthenticated, getUserRole } from "../utils/auth";
 
-const ProtectedRoute = ({ children, role, redirectTo }) => {
+const ProtectedRoute = ({ children, role }) => {
     const isAuth = isAuthenticated();
-
     if (!isAuth) {
-        console.log("🚫 Not logged in");
-        return <Navigate to={redirectTo} replace />;
+        return <Navigate to="/login" replace />;
     }
-
     const userRole = getUserRole();
-
-    console.log(" Role Check:", {
-        userRole,
-        requiredRole: role
-    });
-
     if (role && userRole !== role) {
-        console.log("🚫 Role mismatch → redirecting");
-        return <Navigate to={redirectTo} replace />;
-    }
+        if (userRole === "ADMIN") {
+            return <Navigate to="/dashboard" replace />;
+        }
 
+        if (userRole === "CUSTOMER") {
+            return <Navigate to="/customer-dashboard" replace />;
+        }
+    }
     return children;
 };
 
