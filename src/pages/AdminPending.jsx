@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import {
     Container, Typography, Box, Card, CardContent,
     CardActions, Button, Grid, Avatar,
@@ -26,11 +26,11 @@ import {
     rejectBeneficiary
 } from "../api/beneficiaryApi";
 
-const SectionHeader = ({ title, icon: Icon, count }) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <Icon sx={{ color: "#2563EB" }} />
+const SectionHeader = ({title, icon: Icon, count}) => (
+    <Box sx={{display: "flex", alignItems: "center", gap: 1, mb: 2}}>
+        <Icon sx={{color: "#2563EB"}}/>
         <Typography fontWeight={700}>{title}</Typography>
-        <Chip label={count} size="small" />
+        <Chip label={count} size="small"/>
     </Box>
 );
 
@@ -67,10 +67,11 @@ const AdminPending = () => {
         setLoading(false);
     };
 
-    const getUser = (id) =>
-        customers.find(c => c.customerId === id) || {};
+    const getUser = (id) => {
+        if (!id) return {};
+        return customers.find(c => c.customerId === id) || {};
+    };
 
-    // Generic action handler
     const handleAction = async (fn, id) => {
         setActionLoading(id);
         setMessage("");
@@ -92,8 +93,8 @@ const AdminPending = () => {
     };
 
     const renderCard = (title, icon, list, renderContent) => (
-        <Card sx={{ borderRadius: 3, p: 2 }}>
-            <SectionHeader title={title} icon={icon} count={list.length} />
+        <Card sx={{borderRadius: 3, p: 2}}>
+            <SectionHeader title={title} icon={icon} count={list.length}/>
 
             {list.length === 0 ? (
                 <Typography color="text.secondary">
@@ -107,14 +108,14 @@ const AdminPending = () => {
 
     if (loading) {
         return (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
-                <CircularProgress />
+            <Box sx={{display: "flex", justifyContent: "center", mt: 6}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Container maxWidth="xl" sx={{mt: 4}}>
 
             {/* HEADER */}
             <Typography variant="h4" fontWeight={700} mb={1}>
@@ -126,7 +127,7 @@ const AdminPending = () => {
 
             {/* ALERT */}
             {message && (
-                <Alert severity={error ? "error" : "success"} sx={{ mb: 2 }}>
+                <Alert severity={error ? "error" : "success"} sx={{mb: 2}}>
                     {message}
                 </Alert>
             )}
@@ -139,12 +140,12 @@ const AdminPending = () => {
                         const user = getUser(c.customerId);
 
                         return (
-                            <Card key={c.id} sx={{ mb: 2, border: "1px solid #E5E7EB" }}>
+                            <Card key={c.id} sx={{mb: 2, border: "1px solid #E5E7EB"}}>
                                 <CardContent>
 
                                     {/* USER */}
-                                    <Box sx={{ display: "flex", gap: 2 }}>
-                                        <Avatar sx={{ bgcolor: "#2563EB" }}>
+                                    <Box sx={{display: "flex", gap: 2}}>
+                                        <Avatar sx={{bgcolor: "#2563EB"}}>
                                             {user.fullName?.charAt(0)}
                                         </Avatar>
 
@@ -161,7 +162,7 @@ const AdminPending = () => {
                                         </Box>
                                     </Box>
 
-                                    <Divider sx={{ my: 2 }} />
+                                    <Divider sx={{my: 2}}/>
 
                                     <Typography fontSize={13}>
                                         Card Holder Name: <b>{c.cardHolderName}</b>
@@ -177,17 +178,17 @@ const AdminPending = () => {
                                     <Button
                                         variant="contained"
                                         color="success"
-                                        startIcon={<CheckCircle />}
+                                        startIcon={<CheckCircle/>}
                                         onClick={() => handleAction(approveCard, c.id)}
                                         disabled={actionLoading === c.id}
                                     >
-                                        {actionLoading === c.id ? <CircularProgress size={18} /> : "Approve"}
+                                        {actionLoading === c.id ? <CircularProgress size={18}/> : "Approve"}
                                     </Button>
 
                                     <Button
                                         variant="contained"
                                         color="error"
-                                        startIcon={<Cancel />}
+                                        startIcon={<Cancel/>}
                                         onClick={() => handleAction(rejectCard, c.id)}
                                         disabled={actionLoading === c.id}
                                     >
@@ -202,13 +203,13 @@ const AdminPending = () => {
                 {/* LOANS */}
                 <Grid item xs={12}>
                     {renderCard("Loan Requests", AccountBalance, loans, (l) => {
-                        const user = getUser(l.customerId);
+                        const user = getUser(l.customerId || l.account?.customerId);
 
                         return (
-                            <Card key={l.loanId} sx={{ mb: 2 }}>
+                            <Card key={l.loanId} sx={{mb: 2}}>
                                 <CardContent>
 
-                                    <Box sx={{ display: "flex", gap: 2 }}>
+                                    <Box sx={{display: "flex", gap: 2}}>
                                         <Avatar>{user.fullName?.charAt(0)}</Avatar>
 
                                         <Box>
@@ -220,13 +221,13 @@ const AdminPending = () => {
                                         </Box>
                                     </Box>
 
-                                    <Divider sx={{ my: 2 }} />
+                                    <Divider sx={{my: 2}}/>
 
                                     <Typography>
                                         Loan Type: <b>{l.loanType}</b>
                                     </Typography>
                                     <Typography>
-                                        Amount: <b>₹{l.loanAmount}</b>
+                                        Amount: <b>₹{l.loanAmount || l.amount}</b>
                                     </Typography>
 
                                 </CardContent>
@@ -256,28 +257,47 @@ const AdminPending = () => {
                 {/* BENEFICIARIES */}
                 <Grid item xs={12}>
                     {renderCard("Beneficiaries", People, beneficiaries, (b) => {
+
                         const user = getUser(b.customerId);
 
                         return (
-                            <Card key={b.beneficiaryId} sx={{ mb: 2 }}>
+                            <Card key={b.beneficiaryId} sx={{mb: 2}}>
                                 <CardContent>
 
-                                    <Box sx={{ display: "flex", gap: 2 }}>
-                                        <Avatar>{user.fullName?.charAt(0)}</Avatar>
+                                    <Box sx={{display: "flex", gap: 2}}>
+                                        <Avatar sx={{bgcolor: "#2563EB"}}>
+                                            {user.fullName?.charAt(0)}
+                                        </Avatar>
 
                                         <Box>
+                                            {/* ✅ CUSTOMER */}
                                             <Typography fontWeight={600}>
-                                                {user.fullName}
+                                                {user.fullName || "Unknown User"}
                                             </Typography>
-                                            <Typography fontSize={13}>{user.email}</Typography>
+
+                                            <Typography fontSize={13} color="text.secondary">
+                                                {user.email || "No Email"}
+                                            </Typography>
+
+                                            <Typography fontSize={13} color="text.secondary">
+                                                {user.phone || ""}
+                                            </Typography>
+
+                                            <Divider sx={{my: 1}}/>
+
+                                            {/* ✅ BENEFICIARY */}
+                                            <Typography fontWeight={600}>
+                                                Beneficiary: {b.beneficiaryName}
+                                            </Typography>
                                         </Box>
                                     </Box>
 
-                                    <Divider sx={{ my: 2 }} />
+                                    <Divider sx={{my: 2}}/>
 
                                     <Typography>
                                         Account: <b>{b.beneficiaryAccount}</b>
                                     </Typography>
+
                                     <Typography>
                                         IFSC: <b>{b.ifscCode}</b>
                                     </Typography>

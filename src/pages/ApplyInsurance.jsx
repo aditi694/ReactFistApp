@@ -8,6 +8,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { applyInsurance } from "../api/customerApi";
+import {getUserFromToken} from "../utils/auth.js";
 
 const insuranceTypes = ["LIFE", "HEALTH", "LOAN", "VEHICLE"];
 
@@ -31,9 +32,12 @@ const ApplyInsurance = () => {
             return;
         }
 
+        const user = getUserFromToken();
+
         const res = await applyInsurance({
             insuranceType: type,
-            coverageAmount: Number(amount)
+            coverageAmount: Number(amount),
+            accountId: user?.accountId || user?.accountNumber
         });
 
         if (res?.error) {
@@ -42,8 +46,7 @@ const ApplyInsurance = () => {
             return;
         }
 
-        setMessage(res?.resultInfo?.resultMsg || "Insurance applied");
-
+        setMessage(res?.message || "Insurance applied");
         setTimeout(() => {
             navigate("/customer-dashboard", { state: { refresh: true } });
         }, 1500);

@@ -40,7 +40,7 @@ const ApplyLoan = () => {
 
         const res = await applyLoan({
             loanType,
-            amount: Number(amount) // ✅ CORRECT FIELD
+            amount: Number(amount)
         });
 
         if (res?.error) {
