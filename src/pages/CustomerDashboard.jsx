@@ -564,7 +564,7 @@ const CustomerDashboard = () => {
                                 <CardContent sx={{ p: 2.5 }}>
                                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                                         <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Credit Card</Typography>
-                                        <IconButton size="small"><MoreHoriz sx={{ fontSize: 17, color: "#9CA3AF" }} /></IconButton>
+                                        {/*<IconButton size="small"><MoreHoriz sx={{ fontSize: 17, color: "#9CA3AF" }} /></IconButton>*/}
                                     </Box>
 
                                     {data.creditCard?.status === "ACTIVE" ? (
@@ -635,7 +635,7 @@ const CustomerDashboard = () => {
                                 <CardContent sx={{ p: 2.5 }}>
                                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                                         <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Quick Access</Typography>
-                                        <IconButton size="small"><MoreHoriz sx={{ fontSize: 17, color: "#9CA3AF" }} /></IconButton>
+                                        {/*<IconButton size="small"><MoreHoriz sx={{ fontSize: 17, color: "#9CA3AF" }} /></IconButton>*/}
                                     </Box>
 
                                     {data.bankBranch && (
