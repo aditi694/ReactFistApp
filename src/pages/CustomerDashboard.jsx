@@ -379,7 +379,7 @@ const CustomerDashboard = () => {
 
                 {/* PAGE CONTENT */}
                 <Box sx={{ flex: 1, overflow: "auto", p: 2.5 }}>
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr", lg: "1fr 320px" }, gap: 2.5, maxWidth: 1280, mx: "auto" }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr", lg: "1fr 320px" }, gap: 1.5, maxWidth: 1600, mx: "auto" }}>
 
                         {/* ════ LEFT COLUMN ════════════════════════════════ */}
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
@@ -400,7 +400,7 @@ const CustomerDashboard = () => {
                                                         sx={{ fontSize: 10, height: 19, bgcolor: "#EFF6FF", color: "#2563EB", fontWeight: 700 }}
                                                     />
                                                 </Box>
-                                                <IconButton size="small"><MoreHoriz sx={{ fontSize: 17, color: "#9CA3AF" }} /></IconButton>
+                                                {/*<IconButton size="small"><MoreHoriz sx={{ fontSize: 17, color: "#9CA3AF" }} /></IconButton>*/}
                                             </Box>
 
                                             <Typography sx={{ fontFamily: "monospace", fontSize: 30, fontWeight: 800, color: "#111827", letterSpacing: -1 }}>

@@ -10,7 +10,7 @@ import {
     Grid
 } from "@mui/material";
 
-import { getTransactions, downloadTransactionsPdf } from "../api/transactionApi";
+import {getTransactions, sendPdfToEmail} from "../api/transactionApi";
 import { getAccountNumber } from "../utils/accountHelper";
 
 const HistoryPage = () => {
@@ -78,10 +78,15 @@ const HistoryPage = () => {
             setMessage("Please select date range");
             return;
         }
-
-        setDownloading(true);
-        await downloadTransactionsPdf(accountNumber, fromDate, toDate);
-        setDownloading(false);
+        try {
+            setDownloading(true);
+            await sendPdfToEmail(accountNumber, fromDate, toDate);
+            setMessage("✅ PDF sent to your email successfully!");
+        } catch{
+            setMessage("❌ Failed to send PDF");
+        } finally {
+            setDownloading(false);
+        }
     };
 
     return (
@@ -149,7 +154,7 @@ const HistoryPage = () => {
                     onClick={handleDownloadPdf}
                     disabled={!accountNumber || downloading}
                 >
-                    {downloading ? "Downloading..." : "📄 PDF"}
+                    {downloading ? "Downloading..." : "Generate PDF"}
                 </Button>
             </Box>
 
