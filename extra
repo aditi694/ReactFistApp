@@ -1,0 +1,191 @@
+{/* ══ MOBILE DRAWER ══════════════════════════════════════ */}
+            {/*<Drawer*/}
+            {/*    anchor="left"*/}
+            {/*    open={menuOpen}*/}
+            {/*    onClose={() => setMenuOpen(false)}*/}
+            {/*    sx={{display: {xs: "block", md: "none"}}}*/}
+            {/*>*/}
+            {/*    <Box sx={{width: 220, p: 2}}>*/}
+            {/*        <Typography sx={{fontWeight: "bold", mb: 2}}>Menu</Typography>*/}
+            {/*        {menuItems.map(({icon: Icon, label, path}) => {*/}
+            {/*            const isActive = location.pathname === path;*/}
+            {/*            return (*/}
+            {/*                <Box*/}
+            {/*                    key={label}*/}
+            {/*                    onClick={() => {*/}
+            {/*                        navigate(path);*/}
+            {/*                        setMenuOpen(false);*/}
+            {/*                    }}*/}
+            {/*                    sx={{*/}
+            {/*                        display: "flex", alignItems: "center", gap: 1.5,*/}
+            {/*                        p: 1, borderRadius: 2, cursor: "pointer", mb: 1,*/}
+            {/*                        bgcolor: isActive ? "#E0F2FE" : "transparent",*/}
+            {/*                        color: isActive ? "#2563EB" : "#000",*/}
+            {/*                        "&:hover": {bgcolor: "#F1F5F9"}*/}
+            {/*                    }}*/}
+            {/*                >*/}
+            {/*                    <Icon sx={{fontSize: 18}}/>*/}
+            {/*                    <Typography sx={{fontSize: 14}}>{label}</Typography>*/}
+            {/*                </Box>*/}
+            {/*            );*/}
+            {/*        })}*/}
+            {/*        <Typography onClick={handleLogout} sx={{mt: 3, color: "red", cursor: "pointer"}}>*/}
+            {/*            Logout*/}
+            {/*        </Typography>*/}
+            {/*    </Box>*/}
+            {/*</Drawer>*/}
+
+            {/* ══ SIDEBAR ════════════════════════════════════════════ */}
+            {/*<Box sx={{*/}
+            {/*    display: {xs: "none", md: "flex"},*/}
+            {/*    width: 210, bgcolor: "#fff",*/}
+            {/*    borderRight: "1px solid #E5E7EB",*/}
+            {/*    flexDirection: "column", py: 3, px: 2,*/}
+            {/*    flexShrink: 0, position: "sticky", top: 0, height: "100vh"*/}
+            {/*}}>*/}
+            {/*    <Box sx={{display: "flex", alignItems: "center", gap: 1.5, px: 1, mb: 4}}>*/}
+            {/*        <Box sx={{*/}
+            {/*            width: 32,*/}
+            {/*            height: 32,*/}
+            {/*            bgcolor: "#2563EB",*/}
+            {/*            borderRadius: 1.5,*/}
+            {/*            display: "flex",*/}
+            {/*            alignItems: "center",*/}
+            {/*            justifyContent: "center"*/}
+            {/*        }}>*/}
+            {/*            <AccountBalance sx={{color: "#fff", fontSize: 17}}/>*/}
+            {/*        </Box>*/}
+            {/*        <Typography sx={{fontWeight: 800, fontSize: 14, color: "#111827", letterSpacing: -0.3}}>UNION*/}
+            {/*            BANK</Typography>*/}
+            {/*    </Box>*/}
+
+            {/*    {menuItems.map(({icon: Icon, label, path}) => {*/}
+            {/*        const active = location.pathname === path;*/}
+            {/*        return (*/}
+            {/*            <Box key={label} onClick={() => navigate(path)} sx={{*/}
+            {/*                display: "flex", alignItems: "center", gap: 1.5,*/}
+            {/*                px: 1.5, py: 1.1, borderRadius: 1.5, mb: 0.4, cursor: "pointer",*/}
+            {/*                bgcolor: active ? "#EFF6FF" : "transparent",*/}
+            {/*                borderLeft: `3px solid ${active ? "#2563EB" : "transparent"}`,*/}
+            {/*                "&:hover": {bgcolor: active ? "#EFF6FF" : "#F8FAFC"},*/}
+            {/*                transition: "all 0.15s"*/}
+            {/*            }}>*/}
+            {/*                <Icon sx={{fontSize: 17, color: active ? "#2563EB" : "#6B7280"}}/>*/}
+            {/*                <Typography sx={{*/}
+            {/*                    fontSize: 13,*/}
+            {/*                    fontWeight: active ? 700 : 500,*/}
+            {/*                    color: active ? "#2563EB" : "#374151"*/}
+            {/*                }}>*/}
+            {/*                    {label}*/}
+            {/*                </Typography>*/}
+            {/*            </Box>*/}
+            {/*        );*/}
+            {/*    })}*/}
+
+            {/*    <Box sx={{flex: 1}}/>*/}
+            {/*    <Box onClick={handleLogout} sx={{*/}
+            {/*        display: "flex",*/}
+            {/*        alignItems: "center",*/}
+            {/*        gap: 1.5,*/}
+            {/*        px: 1.5,*/}
+            {/*        py: 1.1,*/}
+            {/*        borderRadius: 1.5,*/}
+            {/*        cursor: "pointer",*/}
+            {/*        "&:hover": {bgcolor: "#FEF2F2"}*/}
+            {/*    }}>*/}
+            {/*        <Logout sx={{fontSize: 17, color: "#EF4444"}}/>*/}
+            {/*        <Typography sx={{fontSize: 13, fontWeight: 500, color: "#EF4444"}}>Logout</Typography>*/}
+            {/*    </Box>*/}
+            {/*</Box>*/}
+
+
+
+
+
+
+                {/*/!* TOP BAR *!/*/}
+                {/*<Box sx={{*/}
+                {/*    bgcolor: "#fff",*/}
+                {/*    borderBottom: "1px solid #E5E7EB",*/}
+                {/*    display: "flex",*/}
+                {/*    alignItems: "center",*/}
+                {/*    justifyContent: "space-between",*/}
+                {/*    px: { xs: 1.5, sm: 2, md: 3 },*/}
+                {/*    py: 1.2,*/}
+                {/*    gap: 1*/}
+                {/*}}>*/}
+
+                {/*    /!* LEFT *!/*/}
+                {/*    <Box sx={{display: "flex", alignItems: "center"}}>*/}
+                {/*        <Box sx={{display: {xs: "block", md: "none"}}}>*/}
+                {/*            <Hamburger toggled={menuOpen} toggle={setMenuOpen} size={20}/>*/}
+                {/*        </Box>*/}
+                {/*    </Box>*/}
+
+                {/*    /!* CENTER SEARCH *!/*/}
+                {/*    <Box sx={{flex: 1,*/}
+                {/*        display: { xs: "none", sm: "flex" }, justifyContent: "center"}}>*/}
+                {/*        <TextField*/}
+                {/*            fullWidth*/}
+                {/*            placeholder="Search payment, transfer, transaction..."*/}
+                {/*            value={searchTerm}*/}
+                {/*            onChange={(e) => setSearchTerm(e.target.value)}*/}
+                {/*            onKeyDown={handleSearch}*/}
+                {/*            size="small"*/}
+                {/*            sx={{maxWidth: 400, bgcolor: "#F8FAFC", borderRadius: 2}}*/}
+                {/*            InputProps={{*/}
+                {/*                startAdornment: (*/}
+                {/*                    <InputAdornment position="start">*/}
+                {/*                        <Search sx={{fontSize: 18}}/>*/}
+                {/*                    </InputAdornment>*/}
+                {/*                )*/}
+                {/*            }}*/}
+                {/*        />*/}
+                {/*    </Box>*/}
+
+                {/*    /!* RIGHT *!/*/}
+                {/*    <Box sx={{*/}
+                {/*        display: "flex",*/}
+                {/*        alignItems: "center",*/}
+                {/*        gap: { xs: 0.5, sm: 1.5 }*/}
+                {/*    }}>*/}
+                {/*        <IconButton sx={{ display: { xs: "flex", sm: "none" } }}>*/}
+                {/*            <Search />*/}
+                {/*        </IconButton>*/}
+
+                {/*        <IconButton size="small" sx={{ bgcolor: "#F8FAFC", border: "1px solid #E5E7EB" }}>*/}
+                {/*            <Notifications sx={{ fontSize: 18 }} />*/}
+                {/*        </IconButton>*/}
+
+                {/*        /!* USER *!/*/}
+                {/*        <Box*/}
+                {/*            sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}*/}
+                {/*            onClick={(e) => setAnchorEl(e.currentTarget)}*/}
+                {/*        >*/}
+                {/*            <Avatar sx={{*/}
+                {/*                width: 32,*/}
+                {/*                height: 32,*/}
+                {/*                bgcolor: "#2563EB",*/}
+                {/*                fontSize: 13*/}
+                {/*            }}>*/}
+                {/*                {data?.customerName?.charAt(0)}*/}
+                {/*            </Avatar>*/}
+
+                {/*            /!* Hide name on small screens *!/*/}
+                {/*            <Box sx={{ display: { xs: "none", sm: "block" } }}>*/}
+                {/*                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>*/}
+                {/*                    {data?.customerName}*/}
+                {/*                </Typography>*/}
+                {/*                <Typography sx={{ fontSize: 11, color: "#6B7280" }}>*/}
+                {/*                    {data?.accountType?.split(" ")[0] || "SAVINGS"}*/}
+                {/*                </Typography>*/}
+                {/*            </Box>*/}
+                {/*        </Box>*/}
+                {/*    </Box>*/}
+
+                {/*    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>*/}
+                {/*        <MenuItem onClick={handleLogout} sx={{fontSize: 13, color: "#EF4444"}}>*/}
+                {/*            <Logout sx={{fontSize: 15, mr: 1}}/> Logout*/}
+                {/*        </MenuItem>*/}
+                {/*    </Menu>*/}
+                {/*</Box>*/}

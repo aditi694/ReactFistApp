@@ -1,8 +1,8 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import {
     Container, Typography, Box, Card, CardContent,
-    CardActions, Button, Grid, Avatar,
-    Chip, Divider, CircularProgress, Alert
+    CardActions, Button, Grid, Avatar, Chip, Divider,
+    CircularProgress, Alert
 } from "@mui/material";
 
 import {
@@ -11,12 +11,8 @@ import {
 } from "@mui/icons-material";
 
 import {
-    getPendingLoans,
-    approveLoan,
-    rejectLoan,
-    getPendingCards,
-    approveCard,
-    rejectCard,
+    getPendingLoans, approveLoan, rejectLoan,
+    getPendingCards, approveCard, rejectCard,
     getAllCustomers
 } from "../api/adminApi";
 
@@ -26,11 +22,18 @@ import {
     rejectBeneficiary
 } from "../api/beneficiaryApi";
 
-const SectionHeader = ({title, icon: Icon, count}) => (
-    <Box sx={{display: "flex", alignItems: "center", gap: 1, mb: 2}}>
-        <Icon sx={{color: "#2563EB"}}/>
-        <Typography fontWeight={700}>{title}</Typography>
-        <Chip label={count} size="small"/>
+const SectionHeader = ({ title, icon: Icon, count }) => (
+    <Box sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        mb: 3,
+        pb: 2,
+        borderBottom: "2px solid #f0f0f0"
+    }}>
+        <Icon sx={{ color: "#2563EB", fontSize: 30 }} />
+        <Typography variant="h5" fontWeight={700}>{title}</Typography>
+        <Chip label={count} color="primary" size="small" sx={{ fontWeight: 600 }} />
     </Box>
 );
 
@@ -51,7 +54,6 @@ const AdminPending = () => {
 
     const fetchAll = async () => {
         setLoading(true);
-
         const [cardRes, loanRes, benRes, custRes] = await Promise.all([
             getPendingCards(),
             getPendingLoans(),
@@ -63,270 +65,181 @@ const AdminPending = () => {
         setLoans(loanRes?.data?.loans || []);
         setBeneficiaries(benRes?.data || []);
         setCustomers(custRes?.data || []);
-
         setLoading(false);
     };
 
-    const getUser = (id) => {
-        if (!id) return {};
-        return customers.find(c => c.customerId === id) || {};
-    };
+    const getUser = (id) => customers.find(c => c.customerId === id) || {};
 
-    const handleAction = async (fn, id) => {
+    const handleAction = async (fn, id, successMsg) => {
         setActionLoading(id);
         setMessage("");
 
         const res = await fn(id);
-
-        setActionLoading(null);
-
         if (res?.error) {
             setError(true);
             setMessage(res.message || "Action failed");
-            return;
+        } else {
+            setError(false);
+            setMessage(successMsg);
+            fetchAll();
         }
-
-        setError(false);
-        setMessage("Action completed successfully");
-
-        fetchAll();
+        setActionLoading(null);
     };
-
-    const renderCard = (title, icon, list, renderContent) => (
-        <Card sx={{borderRadius: 3, p: 2}}>
-            <SectionHeader title={title} icon={icon} count={list.length}/>
-
-            {list.length === 0 ? (
-                <Typography color="text.secondary">
-                    No pending {title.toLowerCase()}
-                </Typography>
-            ) : (
-                list.map(renderContent)
-            )}
-        </Card>
-    );
 
     if (loading) {
         return (
-            <Box sx={{display: "flex", justifyContent: "center", mt: 6}}>
-                <CircularProgress/>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
+                <CircularProgress size={60} />
             </Box>
         );
     }
 
     return (
-        <Container maxWidth="xl" sx={{mt: 4}}>
+        <Container maxWidth="lg" sx={{ mt: { xs: 2, md: 4 }, px: { xs: 2, sm: 3 } }}>
 
-            {/* HEADER */}
-            <Typography variant="h4" fontWeight={700} mb={1}>
-                Pending Requests
-            </Typography>
-            <Typography color="text.secondary" mb={3}>
+            <Typography variant="h4" fontWeight={700} mb={1}>Pending Requests</Typography>
+            <Typography color="text.secondary" mb={5}>
                 Approval panel for all pending operations
             </Typography>
 
-            {/* ALERT */}
-            {message && (
-                <Alert severity={error ? "error" : "success"} sx={{mb: 2}}>
-                    {message}
-                </Alert>
-            )}
+            {message && <Alert severity={error ? "error" : "success"} sx={{ mb: 4 }}>{message}</Alert>}
 
-            <Grid container spacing={3}>
-
-                {/* CARD REQUESTS */}
-                <Grid item xs={12}>
-                    {renderCard("Card Requests", CreditCard, cards, (c) => {
+            {/* Card Requests */}
+            <Box sx={{ mb: 6 }}>
+                <SectionHeader title="Card Requests" icon={CreditCard} count={cards.length} />
+                <Grid container spacing={3}>
+                    {cards.map((c) => {
                         const user = getUser(c.customerId);
-
                         return (
-                            <Card key={c.id} sx={{mb: 2, border: "1px solid #E5E7EB"}}>
-                                <CardContent>
-
-                                    {/* USER */}
-                                    <Box sx={{display: "flex", gap: 2}}>
-                                        <Avatar sx={{bgcolor: "#2563EB"}}>
-                                            {user.fullName?.charAt(0)}
-                                        </Avatar>
-
-                                        <Box>
-                                            <Typography fontWeight={600}>
-                                                {user.fullName}
-                                            </Typography>
-                                            <Typography fontSize={13} color="text.secondary">
-                                                {user.email}
-                                            </Typography>
-                                            <Typography fontSize={13} color="text.secondary">
-                                                {user.phone}
-                                            </Typography>
+                            <Grid item xs={12} sm={6} md={5} key={c.id}>
+                                <Card sx={{ borderRadius: 4, boxShadow: 3, height: "100%" }}>
+                                    <CardContent sx={{ pb: 1 }}>
+                                        <Box sx={{ display: "flex", gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: "#2563EB" }}>{user.fullName?.charAt(0)}</Avatar>
+                                            <Box>
+                                                <Typography fontWeight={600}>{user.fullName}</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {user.email} • {user.phone}
+                                                </Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
 
-                                    <Divider sx={{my: 2}}/>
+                                        <Divider sx={{ my: 2 }} />
 
-                                    <Typography fontSize={13}>
-                                        Card Holder Name: <b>{c.cardHolderName}</b>
-                                    </Typography>
+                                        <Typography variant="body2"><b>Card Holder:</b> {c.cardHolderName}</Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            Request ID: {c.id}
+                                        </Typography>
+                                    </CardContent>
 
-                                    <Typography fontSize={12} color="text.secondary">
-                                        Request ID: {c.id}
-                                    </Typography>
-
-                                </CardContent>
-
-                                <CardActions>
-                                    <Button
-                                        variant="contained"
-                                        color="success"
-                                        startIcon={<CheckCircle/>}
-                                        onClick={() => handleAction(approveCard, c.id)}
-                                        disabled={actionLoading === c.id}
-                                    >
-                                        {actionLoading === c.id ? <CircularProgress size={18}/> : "Approve"}
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        startIcon={<Cancel/>}
-                                        onClick={() => handleAction(rejectCard, c.id)}
-                                        disabled={actionLoading === c.id}
-                                    >
-                                        Reject
-                                    </Button>
-                                </CardActions>
-                            </Card>
+                                    <CardActions sx={{ px: 2, pb: 2, gap: 1.5 }}>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="success"
+                                            startIcon={<CheckCircle />}
+                                            onClick={() => handleAction(approveCard, c.id, "Card Approved Successfully")}
+                                            disabled={actionLoading === c.id}
+                                        >
+                                            APPROVE
+                                        </Button>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="error"
+                                            startIcon={<Cancel />}
+                                            onClick={() => handleAction(rejectCard, c.id, "Card Rejected")}
+                                            disabled={actionLoading === c.id}
+                                        >
+                                            REJECT
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            </Grid>
                         );
                     })}
                 </Grid>
+            </Box>
 
-                {/* LOANS */}
-                <Grid item xs={12}>
-                    {renderCard("Loan Requests", AccountBalance, loans, (l) => {
+            {/* Loan Requests */}
+            <Box sx={{ mb: 6 }}>
+                <SectionHeader title="Loan Requests" icon={AccountBalance} count={loans.length} />
+                <Grid container spacing={3}>
+                    {loans.map((l) => {
                         const user = getUser(l.customerId || l.account?.customerId);
-
                         return (
-                            <Card key={l.loanId} sx={{mb: 2}}>
-                                <CardContent>
-
-                                    <Box sx={{display: "flex", gap: 2}}>
-                                        <Avatar>{user.fullName?.charAt(0)}</Avatar>
-
-                                        <Box>
-                                            <Typography fontWeight={600}>
-                                                {user.fullName}
-                                            </Typography>
-                                            <Typography fontSize={13}>{user.email}</Typography>
-                                            <Typography fontSize={13}>{user.phone}</Typography>
+                            <Grid item xs={12} sm={6} md={5} key={l.loanId}>
+                                <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Box sx={{ display: "flex", gap: 2 }}>
+                                            <Avatar>{user.fullName?.charAt(0)}</Avatar>
+                                            <Box>
+                                                <Typography fontWeight={600}>{user.fullName}</Typography>
+                                                <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
 
-                                    <Divider sx={{my: 2}}/>
+                                        <Divider sx={{ my: 2 }} />
 
-                                    <Typography>
-                                        Loan Type: <b>{l.loanType}</b>
-                                    </Typography>
-                                    <Typography>
-                                        Amount: <b>₹{l.loanAmount || l.amount}</b>
-                                    </Typography>
+                                        <Typography><b>Loan Type:</b> {l.loanType}</Typography>
+                                        <Typography><b>Amount:</b> ₹{(l.loanAmount || l.amount).toLocaleString('en-IN')}</Typography>
+                                    </CardContent>
 
-                                </CardContent>
-
-                                <CardActions>
-                                    <Button
-                                        color="success"
-                                        variant="contained"
-                                        onClick={() => handleAction(approveLoan, l.loanId)}
-                                    >
-                                        Approve
-                                    </Button>
-
-                                    <Button
-                                        color="error"
-                                        variant="contained"
-                                        onClick={() => handleAction(rejectLoan, l.loanId)}
-                                    >
-                                        Reject
-                                    </Button>
-                                </CardActions>
-                            </Card>
+                                    <CardActions sx={{ px: 2, pb: 2, gap: 1.5 }}>
+                                        <Button fullWidth variant="contained" color="success" onClick={() => handleAction(approveLoan, l.loanId, "Loan Approved")}>
+                                            APPROVE
+                                        </Button>
+                                        <Button fullWidth variant="contained" color="error" onClick={() => handleAction(rejectLoan, l.loanId, "Loan Rejected")}>
+                                            REJECT
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            </Grid>
                         );
                     })}
                 </Grid>
+            </Box>
 
-                {/* BENEFICIARIES */}
-                <Grid item xs={12}>
-                    {renderCard("Beneficiaries", People, beneficiaries, (b) => {
-
+            {/* Beneficiaries */}
+            <Box sx={{ mb: 6 }}>
+                <SectionHeader title="Beneficiaries" icon={People} count={beneficiaries.length} />
+                <Grid container spacing={3}>
+                    {beneficiaries.map((b) => {
                         const user = getUser(b.customerId);
-
                         return (
-                            <Card key={b.beneficiaryId} sx={{mb: 2}}>
-                                <CardContent>
-
-                                    <Box sx={{display: "flex", gap: 2}}>
-                                        <Avatar sx={{bgcolor: "#2563EB"}}>
-                                            {user.fullName?.charAt(0)}
-                                        </Avatar>
-
-                                        <Box>
-                                            {/* ✅ CUSTOMER */}
-                                            <Typography fontWeight={600}>
-                                                {user.fullName || "Unknown User"}
-                                            </Typography>
-
-                                            <Typography fontSize={13} color="text.secondary">
-                                                {user.email || "No Email"}
-                                            </Typography>
-
-                                            <Typography fontSize={13} color="text.secondary">
-                                                {user.phone || ""}
-                                            </Typography>
-
-                                            <Divider sx={{my: 1}}/>
-
-                                            {/* ✅ BENEFICIARY */}
-                                            <Typography fontWeight={600}>
-                                                Beneficiary: {b.beneficiaryName}
-                                            </Typography>
+                            <Grid item xs={12} sm={6} md={5} key={b.beneficiaryId}>
+                                <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Box sx={{ display: "flex", gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: "#7192da" }}>{user.fullName?.charAt(0)}</Avatar>
+                                            <Box>
+                                                <Typography fontWeight={600}>{user.fullName}</Typography>
+                                                <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
 
-                                    <Divider sx={{my: 2}}/>
+                                        <Divider sx={{ my: 2 }} />
 
-                                    <Typography>
-                                        Account: <b>{b.beneficiaryAccount}</b>
-                                    </Typography>
+                                        <Typography fontWeight={600}>Beneficiary: {b.beneficiaryName}</Typography>
+                                        <Typography>Account: <b>{b.beneficiaryAccount}</b></Typography>
+                                        <Typography>IFSC: <b>{b.ifscCode}</b></Typography>
+                                    </CardContent>
 
-                                    <Typography>
-                                        IFSC: <b>{b.ifscCode}</b>
-                                    </Typography>
-
-                                </CardContent>
-
-                                <CardActions>
-                                    <Button
-                                        color="success"
-                                        variant="contained"
-                                        onClick={() => handleAction(approveBeneficiary, b.beneficiaryId)}
-                                    >
-                                        Approve
-                                    </Button>
-
-                                    <Button
-                                        color="error"
-                                        variant="contained"
-                                        onClick={() => handleAction(rejectBeneficiary, b.beneficiaryId)}
-                                    >
-                                        Reject
-                                    </Button>
-                                </CardActions>
-                            </Card>
+                                    <CardActions sx={{ px: 2, pb: 2, gap: 1.5 }}>
+                                        <Button fullWidth variant="contained" color="success" onClick={() => handleAction(approveBeneficiary, b.beneficiaryId, "Beneficiary Approved")}>
+                                            APPROVE
+                                        </Button>
+                                        <Button fullWidth variant="contained" color="error" onClick={() => handleAction(rejectBeneficiary, b.beneficiaryId, "Beneficiary Rejected")}>
+                                            REJECT
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            </Grid>
                         );
                     })}
                 </Grid>
+            </Box>
 
-            </Grid>
         </Container>
     );
 };
