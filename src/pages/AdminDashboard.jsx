@@ -11,8 +11,6 @@ import {
     approveCard,
     rejectCard
 } from "../api/adminApi";
-import { getPendingBeneficiaries } from "../api/beneficiaryApi";
-
 import {
     Container, Typography, Box, Paper, Chip, IconButton,
     Avatar, TextField, InputAdornment, Collapse, Grid, Button,
@@ -37,7 +35,6 @@ const AdminDashboard = () => {
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));   // Changed to lg for better transition
-    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
     useEffect(() => {
         fetchAll();
@@ -107,7 +104,6 @@ const AdminDashboard = () => {
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     {filteredCustomers.map((c) => {
                         const isOpen = expanded[c.customerId];
-                        const meta = getMeta(c);
 
                         return (
                             <Card key={c.customerId} sx={{ borderRadius: 3, boxShadow: 3 }}>

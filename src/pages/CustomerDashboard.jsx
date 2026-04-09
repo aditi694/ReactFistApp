@@ -1,10 +1,9 @@
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
 import {
-    Box, Typography, Avatar, IconButton, Chip,
-    Card, CardContent, LinearProgress, Menu, MenuItem,
-    TextField, InputAdornment
+    Box, Typography, Avatar, Chip,
+    Card, CardContent, LinearProgress
 } from "@mui/material";
 import {
     AccountBalanceWallet, TrendingUp, SwapHoriz,
