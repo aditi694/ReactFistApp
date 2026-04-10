@@ -14,3 +14,6 @@ export const applyLoan = (data) =>
 
 export const applyInsurance = (data) =>
     apiRequest("/api/account/insurance/request", "POST", data);
+
+export const getMyInsurances = () =>
+    apiRequest("/api/account/insurance");
