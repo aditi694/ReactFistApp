@@ -20,7 +20,8 @@ import {
     PieChart,
     Pie,
     Cell,
-    Legend
+    Legend,
+    CartesianGrid
 } from "recharts";
 import { TrendingUp, TrendingDown, Receipt, CalendarMonth, BarChart as BarIcon } from "@mui/icons-material";
 
@@ -120,10 +121,13 @@ const AnalyticsPage = () => {
         }
     }, [accountNumber, month]);
 
-    const totalSpending = categories.reduce((sum, cat) => sum + Number(cat.amount || 0), 0);
-
+    // const totalSpending = categories.reduce((sum, cat) => sum + Number(cat.amount || 0), 0);
+    const totalSpending = categories.reduce(
+        (sum, cat) => sum + Number(cat.amount || 0),
+        0
+    );
     return (
-        <Box sx={{ maxWidth: 1280, mx: "auto", p: 3, bgcolor: "#F8FAFC", minHeight: "100vh" }}>
+        <Box sx={{  mx: "auto", p: 3, minHeight: "100vh" }}>
             {/* Header */}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4, flexWrap: "wrap", gap: 2 }}>
                 <Box>
@@ -216,18 +220,79 @@ const AnalyticsPage = () => {
                     </Box>
 
                     {/* Charts Section */}
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "2fr 1fr" }, gap: 3 }}>
-                        {/* Bar Chart */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1.7fr 1fr" }, gap: 3 }}>
+
+                        {/*
+                        Horizontal Bar Chart */}
                         <Card sx={{ borderRadius: 3, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>Category Spending</Typography>
+                                <Typography variant="h6" fontWeight={700}>
+                                    Category Spending
+                                </Typography>
+
+                                {/* 🔥 Insight */}
+                                <Typography sx={{ fontSize: 13, color: "#6B7280", mb: 2 }}>
+                                    {categories[0] && (
+                                        <>
+                                            Highest: <b>{categories[0].category}</b> (₹{categories[0].amount}) •{" "}
+                                            {((categories[0].amount / totalSpending) * 100).toFixed(1)}%
+                                        </>
+                                    )}
+                                </Typography>
+
                                 {categories.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={420}>
-                                        <BarChart data={categories}>
-                                            <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                                            <YAxis />
-                                            <Tooltip formatter={(value) => [`₹${value}`, "Amount"]} />
-                                            <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                                        <BarChart
+                                            data={categories}
+                                            layout="vertical"
+                                            margin={{ top: 10, right: 50, left: 40, bottom: 30 }}
+                                        >
+                                            {/* VALUE AXIS */}
+                                            <XAxis
+                                                type="number"
+                                                tick={{ fontSize: 12 }}
+                                                tickLine={false}
+                                                axisLine={{ stroke: "#E5E7EB" }}
+                                                label={{
+                                                    value: "Amount (₹)",
+                                                    position: "insideBottom",
+                                                    offset: -10,
+                                                    style: { fontSize: 12 }
+                                                }}
+                                            />
+
+                                            {/* CATEGORY AXIS */}
+                                            <YAxis
+                                                type="category"
+                                                dataKey="category"
+                                                width={110}
+                                                tick={{ fontSize: 13 }}
+                                                tickLine={false}
+                                                axisLine={false}
+                                            />
+
+                                            {/* GRID */}
+                                            <CartesianGrid
+                                                strokeDasharray="3 3"
+                                                horizontal={false}
+                                                stroke="#E5E7EB"
+                                            />
+
+                                            {/* TOOLTIP */}
+                                            <Tooltip
+                                                formatter={(value) => [`₹${value}`, "Amount"]}
+                                            />
+
+                                            {/* BARS */}
+                                            <Bar
+                                                dataKey="amount"
+                                                radius={[0, 8, 8, 0]}
+                                                barSize={28}
+                                                label={{
+                                                    position: "right",
+                                                    formatter: (value) => `₹${value}`
+                                                }}
+                                            >
                                                 {categories.map((_, index) => (
                                                     <Cell key={`bar-${index}`} fill={COLORS[index % COLORS.length]} />
                                                 ))}
@@ -242,32 +307,67 @@ const AnalyticsPage = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Pie Chart */}
+                        {/*
+                        Donut Chart */}
                         <Card sx={{ borderRadius: 3, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>Spending Breakdown</Typography>
+                                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                                    Spending Breakdown
+                                </Typography>
+
                                 {categories.length > 0 ? (
-                                    <>
+                                    <Box sx={{ position: "relative" }}>
                                         <ResponsiveContainer width="100%" height={280}>
                                             <PieChart>
                                                 <Pie
                                                     data={categories}
                                                     cx="50%"
-                                                    cy="50%"
-                                                    innerRadius={75}
-                                                    outerRadius={115}
+                                                    cy="45%"
+                                                    innerRadius="60%"
+                                                    outerRadius="85%"
                                                     dataKey="amount"
                                                     nameKey="category"
+                                                    paddingAngle={3}
+                                                    label={({ percent }) =>
+                                                        `${(percent * 100).toFixed(0)}%`
+                                                    }
                                                 >
                                                     {categories.map((_, index) => (
                                                         <Cell key={`pie-${index}`} fill={COLORS[index % COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip formatter={(value) => `₹${value}`} />
-                                                <Legend verticalAlign="bottom" height={50} />
+
+                                                <Tooltip
+                                                    formatter={(value, name) => [`₹${value}`, name]}
+                                                />
+
+                                                <Legend
+                                                    verticalAlign="bottom"
+                                                    align="center"
+                                                    iconType="circle"
+                                                    formatter={(value) => value.toLowerCase()}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                    </>
+
+                                        {/* 🔥 CENTER TOTAL */}
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                top: "48%",
+                                                left: "50%",
+                                                transform: "translate(-50%, -50%)",
+                                                textAlign: "center"
+                                            }}
+                                        >
+                                            <Typography fontSize={12} color="#6B7280">
+                                                Total
+                                            </Typography>
+                                            <Typography fontWeight={700} fontSize={18}>
+                                                ₹{totalSpending.toLocaleString("en-IN")}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
                                 ) : (
                                     <Box sx={{ height: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
                                         <Typography color="#9CA3AF">No spending breakdown available</Typography>

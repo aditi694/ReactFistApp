@@ -40,7 +40,7 @@ const ApplyLoan = () => {
 
     return (
         <Box sx={{
-            maxWidth: 1280,
+            // maxWidth: 1280,
             mx: "auto",
             p: { xs: 2, sm: 3, md: 4, lg: 5 },
             width: "100%"
