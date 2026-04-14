@@ -37,8 +37,8 @@ const ApplyCreditCard = () => {
         <Box
             sx={{
                 p: { xs: 2, md: 4 },
-                minHeight: "100vh",
-                background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
+                minHeight: "100vh"
+                // background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
             }}
         >
             <Grid container spacing={4} alignItems="center">

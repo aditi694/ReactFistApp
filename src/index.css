@@ -122,3 +122,14 @@ button:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
   padding: 16px;
 }
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

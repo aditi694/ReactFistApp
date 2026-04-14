@@ -6,8 +6,7 @@ import {
     Typography,
     Snackbar,
     Alert,
-    MenuItem,
-    CircularProgress
+    MenuItem
 } from "@mui/material";
 
 import {
@@ -20,6 +19,14 @@ import {
     getUserFromToken,
     getAccountNumberFromAPI
 } from "../utils/auth";
+
+import {
+    Dialog, DialogTitle, DialogContent, DialogActions
+} from "@mui/material";
+
+import { AccountBalance, Send } from "@mui/icons-material";
+
+import paymentBg from "../assets/transfer.jpg";
 
 const TransferPage = () => {
 
@@ -37,6 +44,10 @@ const TransferPage = () => {
 
     const [message, setMessage] = useState("");
     const [error, setError] = useState(false);
+
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [lastAmount, setLastAmount] = useState(0);
 
     useEffect(() => {
         const initAccount = async () => {
@@ -62,6 +73,15 @@ const TransferPage = () => {
         fetch();
     }, []);
 
+    useEffect(() => {
+        if (successOpen) {
+            const timer = setTimeout(() => {
+                setSuccessOpen(false);
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [successOpen]);
+
     const validate = () => {
         if (!accountNumber) return "Account not loaded yet";
         if (!selected) return "Select beneficiary";
@@ -71,23 +91,19 @@ const TransferPage = () => {
     };
 
     const pollStatus = (txnId) => {
-
         let attempts = 0;
 
         const interval = setInterval(async () => {
-
             attempts++;
-
             const res = await getTransactionStatus(txnId);
-
             if (res.error) return;
-
             const status = res.data.status;
 
             if (status === "SUCCESS") {
                 clearInterval(interval);
                 setState("SUCCESS");
-                setMessage("✅ Transfer Successful");
+                setSuccessOpen(true);
+                setMessage("");
                 setError(false);
             }
 
@@ -103,12 +119,10 @@ const TransferPage = () => {
                 setState("IDLE");
                 setMessage("⏳ Still processing. Check history.");
             }
-
         }, 2000);
     };
 
     const handleTransfer = async () => {
-
         setMessage("");
         setError(false);
 
@@ -120,15 +134,13 @@ const TransferPage = () => {
         }
 
         setState("LOADING");
-
         const beneficiary = beneficiaries.find(
             (b) => b.beneficiaryId === selected
         );
 
         try {
-
             const res = await transfer({
-                fromAccount: accountNumber, // ✅ FIXED
+                fromAccount: accountNumber,
                 toAccount: beneficiary.beneficiaryAccount,
                 amount: Number(amount),
                 description: desc
@@ -148,12 +160,11 @@ const TransferPage = () => {
             }
 
             const txnId = res.data.transactionId;
-
             setState("PROCESSING");
             setMessage("⏳ Transfer initiated. Processing...");
 
             pollStatus(txnId);
-
+            setLastAmount(amount);
             setAmount("");
             setDesc("");
 
@@ -165,81 +176,204 @@ const TransferPage = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: 500, mx: "auto", mt: 4 }}>
+        <Box sx={{
+            minHeight: "100vh",
+            backgroundImage: `url(${paymentBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 2
+        }}>
 
-            <Typography variant="h4" gutterBottom>
-                Transfer Money
-            </Typography>
+            {/* GLASS CARD */}
+            <Box sx={{
+                width: "100%",
+                maxWidth: 520,
+                backdropFilter: "#fffff",
+                background: "rgba(255,255,255,0.85)",
+                borderRadius: 4,
+                p: 3,
+                boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+            }}>
 
-            {/* FROM ACCOUNT */}
-            <TextField
-                fullWidth
-                label="From Account"
-                value={accountNumber || ""}
-                disabled
-                margin="normal"
-            />
+                <Typography variant="h6" fontWeight="bold" mb={2}>
+                    💸 Send Money
+                </Typography>
 
-            {/* BENEFICIARY */}
-            <TextField
-                select
-                fullWidth
-                label="Select Beneficiary"
-                value={selected}
-                onChange={(e) => setSelected(e.target.value)}
-                margin="normal"
-            >
-                {beneficiaries.map((b) => (
-                    <MenuItem key={b.beneficiaryId} value={b.beneficiaryId}>
-                        {b.beneficiaryName} • {b.beneficiaryAccount}
-                    </MenuItem>
-                ))}
-            </TextField>
+                {/* ACCOUNT */}
+                <Box sx={{ mb: 2 }}>
+                    <Typography fontSize={12} color="gray">From</Typography>
+                    <Typography fontWeight="bold">
+                        ****{accountNumber?.slice(-4)}
+                    </Typography>
+                </Box>
 
-            {/* AMOUNT */}
-            <TextField
-                fullWidth
-                label="Amount"
-                type="number"
-                value={amount || ""}
-                onChange={(e) => setAmount(e.target.value)}
-                margin="normal"
-            />
+                {/* BENEFICIARY */}
+                <TextField
+                    select
+                    fullWidth
+                    label="Select Beneficiary"
+                    value={selected}
+                    onChange={(e) => setSelected(e.target.value)}
+                    sx={{ mb: 2 }}
+                    SelectProps={{
+                        MenuProps: {
+                            disablePortal: false,
+                            container: document.body,
+                            PaperProps: {
+                                sx: {
+                                    backgroundColor: "#ffffff",
+                                    color: "#111827",
+                                    zIndex: 9999,
+                                    mt: 1,
+                                    borderRadius: 2,
+                                    maxHeight: 300
+                                }
+                            }
+                        }
+                    }}
+                >
+                    {beneficiaries.map((b) => (
+                        <MenuItem
+                            key={b.beneficiaryId}
+                            value={b.beneficiaryId}
+                            sx={{
+                                color: "#111827",
+                                fontSize: 14,
+                                "&:hover": {
+                                    backgroundColor: "#F3F4F6"
+                                }
+                            }}
+                        >
+                            {b.beneficiaryName} • ****{b.beneficiaryAccount.slice(-4)}
+                        </MenuItem>
+                    ))}
+                </TextField>
 
-            {/* DESCRIPTION */}
-            <TextField
-                fullWidth
-                label="Description"
-                value={desc || ""}
-                onChange={(e) => setDesc(e.target.value)}
-                margin="normal"
-            />
+                {/* AMOUNT BIG STYLE */}
+                <Box sx={{ textAlign: "center", mb: 2 }}>
+                    <Typography fontSize={12} color="gray">Amount</Typography>
 
-            {/* BUTTON */}
-            <Button
-                fullWidth
-                variant="contained"
-                onClick={handleTransfer}
-                disabled={
-                    state === "LOADING" ||
-                    state === "PROCESSING" ||
-                    !accountNumber
-                }
-                sx={{ mt: 2 }}
-            >
-                {state === "LOADING" && <CircularProgress size={24} />}
-                {state === "PROCESSING" && "Processing..."}
-                {state === "FAILED" && "Retry Transfer"}
-                {(state === "IDLE" || state === "SUCCESS") && "Transfer"}
-            </Button>
+                    <TextField
+                        variant="standard"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="₹0"
+                        InputProps={{
+                            disableUnderline: true,
+                            sx: {
+                                fontSize: 36,
+                                textAlign: "center",
+                                fontWeight: "bold"
+                            }
+                        }}
+                        sx={{ width: "100%" }}
+                    />
+                </Box>
 
-            {/* MESSAGE */}
+                {/* DESCRIPTION */}
+                <TextField
+                    fullWidth
+                    label="Description"
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                    sx={{ mb: 2 }}
+                />
+
+                {/* CTA */}
+                <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={<Send />}
+                    onClick={() => setConfirmOpen(true)}
+                    sx={{
+                        height: 50,
+                        borderRadius: 2,
+                        fontWeight: "bold",
+                        fontSize: 16,
+                        bgcolor: "#2563EB"
+                    }}
+                >
+                    Send ₹{amount || ""}
+                </Button>
+
+            </Box>
+
+            {/* CONFIRM MODAL */}
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>Confirm Transfer</DialogTitle>
+
+                <DialogContent>
+                    <Typography>₹{amount}</Typography>
+                    <Typography fontSize={13} color="gray">
+                        To: {beneficiaries.find(b => b.beneficiaryId === selected)?.beneficiaryName}
+                    </Typography>
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => {
+                            setConfirmOpen(false);
+                            handleTransfer();
+                        }}
+                    >
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* SUCCESS POPUP */}
+            <Dialog open={successOpen} onClose={() => setSuccessOpen(false)}>
+                <Box sx={{ textAlign: "center", p: 3 }}>
+
+                    <Box sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: "50%",
+                        bgcolor: "#10B981",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mx: "auto",
+                        mb: 2
+                    }}>
+                        <Typography sx={{ fontSize: 40, color: "#fff" }}>
+                            ✓
+                        </Typography>
+                    </Box>
+
+                    <Typography variant="h6" fontWeight="bold">
+                        Transfer Successful
+                    </Typography>
+
+                    <Typography variant="h4" fontWeight="bold">
+                        ₹{lastAmount}
+                    </Typography>
+
+                    <Button
+                        fullWidth
+                        onClick={() => setSuccessOpen(false)}
+                        sx={{ mt: 2 }}
+                        variant="contained"
+                    >
+                        Done
+                    </Button>
+
+                </Box>
+            </Dialog>
+
+            {/* SNACKBAR (for errors only) */}
             <Snackbar
                 open={!!message}
                 autoHideDuration={3000}
                 onClose={() => setMessage("")}
             >
-                <Alert severity={error ? "error" : "success"}>
+                <Alert severity={error ? "error" : "info"}>
                     {message}
                 </Alert>
             </Snackbar>

@@ -4,12 +4,18 @@ import {
     TextField,
     Button,
     Typography,
-    Card,
-    CardContent,
     CircularProgress,
-    Grid
+    Grid, TablePagination
 } from "@mui/material";
-
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper
+} from "@mui/material";
 import {getTransactions, sendPdfToEmail} from "../api/transactionApi";
 import { getAccountNumber } from "../utils/accountHelper";
 
@@ -20,9 +26,9 @@ const HistoryPage = () => {
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0); // MUI starts from 0
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [hasMore, setHasMore] = useState(false);
-
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
     const [downloading, setDownloading] = useState(false);
@@ -35,7 +41,7 @@ const HistoryPage = () => {
         load();
     }, []);
 
-    const fetchHistory = async (pageNumber = 1) => {
+    const fetchHistory = async (pageNumber = 0) => {
         if (!accountNumber) {
             setMessage("Account not loaded yet");
             return;
@@ -43,8 +49,8 @@ const HistoryPage = () => {
 
         setLoading(true);
         setMessage("");
+        const res = await getTransactions(accountNumber, pageNumber + 1);
 
-        const res = await getTransactions(accountNumber, pageNumber);
         setLoading(false);
 
         if (res?.error) {
@@ -55,8 +61,17 @@ const HistoryPage = () => {
         const data = res.data;
 
         setList(data.transactions || []);
+
         setHasMore(data.hasMore);
         setPage(pageNumber);
+    };
+
+    const handleChangePage = (event, newPage) => {
+        fetchHistory(newPage);
+    };
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        fetchHistory(0);
     };
 
     const getStatusColor = (status) => {
@@ -90,7 +105,7 @@ const HistoryPage = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: 900, mx: "auto", mt: 4 }}>
+        <Box sx={{ mx: "auto", mt: 3,p:3}}>
 
             {/* HEADER */}
             <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -108,7 +123,7 @@ const HistoryPage = () => {
 
                 <Button
                     variant="contained"
-                    onClick={() => fetchHistory(1)}
+                    onClick={() => fetchHistory(0)}
                     disabled={!accountNumber || loading}
                 >
                     {loading ? <CircularProgress size={24} /> : "Fetch"}
@@ -181,85 +196,122 @@ const HistoryPage = () => {
 
             {/* TRANSACTION LIST */}
             <Grid container spacing={2} sx={{ mt: 2 }}>
-                {list.map((t) => (
-                    <Grid size={12} key={t.transactionId}>
-                        <Card sx={{
+                {list.length > 0 && (
+                    <TableContainer
+                        component={Paper}
+                        sx={{
+                            mt: 3,
                             borderRadius: 3,
-                            boxShadow: 3,
-                            transition: "0.3s",
-                            "&:hover": { transform: "scale(1.02)" }
-                        }}>
-                            <CardContent>
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
+                        }}
+                    >
+                        <Table>
 
-                                <Box display="flex" justifyContent="space-between">
-                                    <Typography variant="h6">
-                                        {t.type}
-                                    </Typography>
+                            {/* HEADER */}
+                            <TableHead>
+                                <TableRow sx={{ backgroundColor: "#F9FAFB" }}>
+                                    <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                                </TableRow>
+                            </TableHead>
 
-                                    <Typography
+                            {/* BODY */}
+                            <TableBody>
+                                {list.map((t) => (
+                                    <TableRow
+                                        key={t.transactionId}
                                         sx={{
-                                            px: 2,
-                                            py: 0.5,
-                                            borderRadius: "20px",
-                                            backgroundColor:
-                                                t.status === "SUCCESS"
-                                                    ? "#e8f5e9"
-                                                    : t.status === "FAILED"
-                                                        ? "#ffebee"
-                                                        : "#fff3e0",
-                                            color: getStatusColor(t.status),
-                                            fontWeight: "bold"
+                                            "&:hover": {
+                                                backgroundColor: "#F9FAFB"
+                                            }
                                         }}
                                     >
-                                        {t.status}
-                                    </Typography>
-                                </Box>
+                                        {/* TYPE */}
+                                        <TableCell sx={{ fontWeight: 600 }}>
+                                            {t.type}
+                                        </TableCell>
 
-                                <Typography sx={{ mt: 1 }}>
-                                    {t.description || "No description"}
-                                </Typography>
+                                        {/* DESCRIPTION */}
+                                        <TableCell>
+                                            {t.description || "—"}
+                                        </TableCell>
 
-                                <Typography sx={{ mt: 1, color: "#555" }}>
-                                    {t.date} • {t.time}
-                                </Typography>
+                                        {/* DATE */}
+                                        <TableCell sx={{ color: "#6B7280" }}>
+                                            {t.date} • {t.time}
+                                        </TableCell>
 
-                                <Typography
-                                    sx={{
-                                        mt: 1,
-                                        fontWeight: "bold",
-                                        fontSize: "18px",
-                                        color: t.type === "DEBIT"
-                                            ? "#d32f2f"
-                                            : "#2e7d32"
-                                    }}
-                                >
-                                    {t.amount}
-                                </Typography>
+                                        {/* AMOUNT */}
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: 700,
+                                                color:
+                                                    t.type === "DEBIT"
+                                                        ? "#EF4444"
+                                                        : "#10B981"
+                                            }}
+                                        >
+                                            {t.type === "DEBIT" ? "-" : "+"} ₹{t.amount}
+                                        </TableCell>
 
-                                <Typography
-                                    variant="body2"
-                                    sx={{ mt: 1, color: "text.secondary" }}
-                                >
-                                    {t.statusMessage}
-                                </Typography>
+                                        {/* STATUS */}
+                                        <TableCell>
+                                            <Box
+                                                sx={{
+                                                    display: "inline-block",
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    borderRadius: "20px",
+                                                    fontSize: 12,
+                                                    fontWeight: 600,
+                                                    backgroundColor:
+                                                        t.status === "SUCCESS"
+                                                            ? "#ECFDF5"
+                                                            : t.status === "FAILED"
+                                                                ? "#FEF2F2"
+                                                                : "#FFF7ED",
+                                                    color: getStatusColor(t.status)
+                                                }}
+                                            >
+                                                {t.status}
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
 
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
+                        </Table>
+                        <TablePagination
+                            component="div"
+                            count={(page + 1) * rowsPerPage + (hasMore ? rowsPerPage : 0)}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                            rowsPerPageOptions={[5]}
+                            sx={{
+                                borderTop: "1px solid #E5E7EB",
+                                mt: 2
+                            }}
+                        />
+                    </TableContainer>
+                )}
             </Grid>
 
-            {/* PAGINATION */}
-            {hasMore && (
-                <Button
-                    fullWidth
-                    sx={{ mt: 3 }}
-                    variant="outlined"
-                    onClick={() => fetchHistory(page + 1)}
-                >
-                    Load More
-                </Button>
-            )}
+            {/*/!* PAGINATION *!/*/}
+            {/*{hasMore && (*/}
+            {/*    <Button*/}
+            {/*        fullWidth*/}
+            {/*        sx={{ mt: 3 }}*/}
+            {/*        variant="outlined"*/}
+            {/*        onClick={() => fetchHistory(page + 1)}*/}
+            {/*    >*/}
+            {/*        Load More*/}
+            {/*    </Button>*/}
+            {/*)}*/}
 
         </Box>
     );
