@@ -15,6 +15,7 @@ import {
 
 import { logout } from "../features/authSlice.jsx";
 import { logoutUser } from "../utils/auth.js";
+import NotificationBell from "../components/NotificationBell";
 
 const CustomerLayout = () => {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -224,14 +225,9 @@ const CustomerLayout = () => {
 
                     {/* RIGHT */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-                        <IconButton sx={{
-                            bgcolor: "#F1F5F9",
-                            width: 40,
-                            height: 40,
-                            borderRadius: 2
-                        }}>
-                            <Notifications />
-                        </IconButton>
+                        <Box className="flex items-center">
+                            <NotificationBell />
+                        </Box>
 
                         <Box sx={{
                             display: "flex",

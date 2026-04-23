@@ -96,7 +96,7 @@ export const getAccountNumberFromAPI = async (user) => {
     try {
         const token = localStorage.getItem("token");
 
-        const response = await fetch("http://localhost:8080/api/account/dashboard", {
+        const response = await fetch("http://192.168.1.23:8080/api/account/dashboard", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

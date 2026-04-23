@@ -26,7 +26,7 @@ export const getTransactionStatus = (txnId) =>
 export const sendPdfToEmail = async (accountNumber, from, to) => {
     const token = localStorage.getItem("token");
     const res = await fetch(
-        `http://localhost:8080/api/customer/transactions/pdf/email?account_number=${accountNumber}&from=${from}&to=${to}`,
+        `http://192.168.1.23:8080/api/customer/transactions/pdf/email?account_number=${accountNumber}&from=${from}&to=${to}`,
         {
             method: "GET",
             headers: {

@@ -1,12 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
     Box,
     TextField,
     Button,
     Typography,
     CircularProgress,
-    Grid, TablePagination
+    Grid,
+    TablePagination,
+    Chip,
+    MenuItem,
+    Popover
 } from "@mui/material";
+
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+
 import {
     Table,
     TableBody,
@@ -16,22 +25,55 @@ import {
     TableRow,
     Paper
 } from "@mui/material";
-import {getTransactions, sendPdfToEmail} from "../api/transactionApi";
+
+import { DateRange } from "react-date-range";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
+
+import { getTransactions, sendPdfToEmail } from "../api/transactionApi";
 import { getAccountNumber } from "../utils/accountHelper";
+
+import { Snackbar, Alert } from "@mui/material";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
+} from "@mui/material";
 
 const HistoryPage = () => {
 
     const [accountNumber, setAccountNumber] = useState("");
     const [list, setList] = useState([]);
+    const [filtered, setFiltered] = useState([]);
+
+    const [typeFilter, setTypeFilter] = useState("ALL");
+
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const [page, setPage] = useState(0); // MUI starts from 0
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage] = useState(5);
     const [hasMore, setHasMore] = useState(false);
-    const [fromDate, setFromDate] = useState("");
-    const [toDate, setToDate] = useState("");
+
     const [downloading, setDownloading] = useState(false);
+
+    const [anchorEl, setAnchorEl] = useState(null);
+
+    const [range, setRange] = useState([
+        {
+            startDate: new Date(),
+            endDate: new Date(),
+            key: "selection"
+        }
+    ]);
+
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success"
+    });
+    const [openDialog, setOpenDialog] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -42,278 +84,332 @@ const HistoryPage = () => {
     }, []);
 
     const fetchHistory = async (pageNumber = 0) => {
-        if (!accountNumber) {
-            setMessage("Account not loaded yet");
-            return;
-        }
+        if (!accountNumber) return;
 
         setLoading(true);
         setMessage("");
+
         const res = await getTransactions(accountNumber, pageNumber + 1);
 
         setLoading(false);
 
         if (res?.error) {
-            setMessage(res.message || "Failed to fetch history");
+            setMessage("Failed to fetch history");
             return;
         }
 
         const data = res.data;
 
         setList(data.transactions || []);
-
         setHasMore(data.hasMore);
         setPage(pageNumber);
     };
 
-    const handleChangePage = (event, newPage) => {
-        fetchHistory(newPage);
-    };
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        fetchHistory(0);
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "SUCCESS":
-                return "#2e7d32";
-            case "FAILED":
-                return "#d32f2f";
-            case "PENDING":
-            case "IN_PROGRESS":
-                return "#ed6c02";
-            default:
-                return "#000";
-        }
-    };
-
     const handleDownloadPdf = async () => {
-        if (!accountNumber || !fromDate || !toDate) {
-            setMessage("Please select date range");
-            return;
-        }
         try {
             setDownloading(true);
-            await sendPdfToEmail(accountNumber, fromDate, toDate);
-            setMessage("✅ PDF sent to your email successfully!");
-        } catch{
-            setMessage("❌ Failed to send PDF");
+
+            await sendPdfToEmail(
+                accountNumber,
+                range[0].startDate.toISOString().split("T")[0],
+                range[0].endDate.toISOString().split("T")[0]
+            );
+
+            setSnackbar({
+                message: "PDF sent successfully",
+                severity: "success"
+            });
+
+            setOpenDialog(true);
+
+        } catch {
+            setSnackbar({
+                message: "Failed to send PDF",
+                severity: "error"
+            });
+
+            setOpenDialog(true);
         } finally {
             setDownloading(false);
         }
     };
 
+    useEffect(() => {
+        if (!list || list.length === 0) {
+            setFiltered([]);
+            return;
+        }
+
+        let temp = [...list];
+
+        if (typeFilter !== "ALL") {
+            temp = temp.filter((t) => t.type === typeFilter);
+        }
+
+        setFiltered(temp);
+    }, [typeFilter, list]);
+
+    // 📊 SUMMARY
+    const summary = useMemo(() => {
+        let credit = 0, debit = 0;
+
+        list.forEach(t => {
+            if (t.type === "CREDIT") credit += t.amount;
+            else debit += t.amount;
+        });
+
+        return { credit, debit, total: list.length };
+    }, [list]);
+
+    const getStatusStyle = (status) => {
+        if (status === "SUCCESS")
+            return { bg: "#ECFDF5", color: "#059669" };
+        if (status === "FAILED")
+            return { bg: "#FEF2F2", color: "#DC2626" };
+        return { bg: "#FFFBEB", color: "#D97706" };
+    };
     return (
-        <Box sx={{ mx: "auto", mt: 3,p:3}}>
+        <>
+            <Box
+                sx={{
+                    width: "100%",                 // ✅ full width
+                    minHeight: "100vh",
+                    background: "#F9FAFB",
+                    p: 4
+                }}
+            >
 
-            {/* HEADER */}
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-                🏦 Transaction History
-            </Typography>
+                {/* HEADER */}
+                <Typography variant="h3" fontWeight={800} mb={1}>
+                    Transaction History
+                </Typography>
 
-            {/* ACCOUNT + FETCH */}
-            <Box sx={{ display: "flex", gap: 2 }}>
-                <TextField
-                    fullWidth
-                    label="Account Number"
-                    value={accountNumber || ""}
-                    disabled
-                />
+                <Typography fontSize={16} color="text.secondary" mb={4}>
+                    Monitor and manage your financial activity
+                </Typography>
 
-                <Button
-                    variant="contained"
-                    onClick={() => fetchHistory(0)}
-                    disabled={!accountNumber || loading}
-                >
-                    {loading ? <CircularProgress size={24} /> : "Fetch"}
-                </Button>
-            </Box>
+                {/* SUMMARY */}
+                <Grid container spacing={3} mb={4}>
+                    {[
+                        { label: "Credits", value: summary.credit, color: "#059669" },
+                        { label: "Debits", value: summary.debit, color: "#DC2626" },
+                        { label: "Transactions", value: summary.total, color: "#4F46E5" }
+                    ].map((c, i) => (
+                        <Grid item xs={12} md={4} key={i}>
+                            <Box
+                                sx={{
+                                    p: 3,
+                                    borderRadius: 4,
+                                    background: "#fff",
+                                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+                                }}
+                            >
+                                <Typography fontSize={14} color="text.secondary">
+                                    {c.label}
+                                </Typography>
 
-            {/* FILTER SECTION */}
-            <Box sx={{
-                display: "flex",
-                gap: 2,
-                mt: 2,
-                p: 2,
-                borderRadius: 2,
-                backgroundColor: "#f5f7fa",
-                boxShadow: 1
-            }}>
-                <TextField
-                    type="date"
-                    label="From"
-                    InputLabelProps={{ shrink: true }}
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    fullWidth
-                />
+                                <Typography fontSize={22} fontWeight={800} sx={{ color: c.color }}>
+                                    ₹{c.value}
+                                </Typography>
+                            </Box>
+                        </Grid>
+                    ))}
+                </Grid>
 
-                <TextField
-                    type="date"
-                    label="To"
-                    InputLabelProps={{ shrink: true }}
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    fullWidth
-                />
-
-                <Button
-                    variant="contained"
+                {/* FILTER BAR */}
+                <Box
                     sx={{
-                        background: "linear-gradient(45deg, #6a11cb, #2575fc)",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        px: 3
+                        p: 3,
+                        borderRadius: 4,
+                        background: "#fff",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                        mb: 4
                     }}
-                    onClick={handleDownloadPdf}
-                    disabled={!accountNumber || downloading}
                 >
-                    {downloading ? "Downloading..." : "Generate PDF"}
-                </Button>
-            </Box>
+                    <Grid container spacing={2} alignItems="center">
 
-            {/* MESSAGE */}
-            {message && (
-                <Typography color="error" sx={{ mt: 2 }}>
-                    {message}
-                </Typography>
-            )}
+                        <Grid item>
+                            <TextField
+                                size="medium"
+                                label="Account"
+                                value={accountNumber || ""}
+                                disabled
+                            />
+                        </Grid>
 
-            {/* LOADING */}
-            {loading && (
-                <Box sx={{ mt: 3 }}>
-                    <CircularProgress />
+                        <Grid item>
+                            <TextField
+                                select
+                                size="medium"
+                                value={typeFilter}
+                                onChange={(e) => setTypeFilter(e.target.value)}
+                            >
+                                <MenuItem value="ALL">All</MenuItem>
+                                <MenuItem value="CREDIT">Credit</MenuItem>
+                                <MenuItem value="DEBIT">Debit</MenuItem>
+                            </TextField>
+                        </Grid>
+
+                        {/* DATE */}
+                        <Grid item>
+                            <Button
+                                variant="outlined"
+                                startIcon={<CalendarTodayIcon />}
+                                sx={{ height: 42 }}
+                                onClick={(e) => setAnchorEl(e.currentTarget)}
+                            >
+                                {range[0].startDate.toLocaleDateString()} -{" "}
+                                {range[0].endDate.toLocaleDateString()}
+                            </Button>
+
+                            <Popover
+                                open={Boolean(anchorEl)}
+                                anchorEl={anchorEl}
+                                onClose={() => setAnchorEl(null)}
+                            >
+                                <DateRange
+                                    ranges={range}
+                                    onChange={(item) => setRange([item.selection])}
+                                    months={2}
+                                />
+                            </Popover>
+                        </Grid>
+
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                sx={{ height: 42, px: 3 }}
+                                onClick={() => fetchHistory(0)}
+                            >
+                                Fetch
+                            </Button>
+                        </Grid>
+
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    height: 42,
+                                    px: 3,
+                                    background: "linear-gradient(135deg,#4F46E5,#7C3AED)"
+                                }}
+                                onClick={handleDownloadPdf}
+                            >
+                                {downloading ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : "PDF"}
+                            </Button>
+                        </Grid>
+
+                    </Grid>
                 </Box>
-            )}
 
-            {/* EMPTY */}
-            {!loading && list.length === 0 && (
-                <Typography sx={{ mt: 3 }}>
-                    No transactions found
-                </Typography>
-            )}
+                {/* TABLE */}
+                <Paper
+                    sx={{
+                        borderRadius: 4,
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+                    }}
+                >
+                    <TableContainer sx={{ maxHeight: 500 }}>
+                        <Table stickyHeader>
 
-            {/* TRANSACTION LIST */}
-            <Grid container spacing={2} sx={{ mt: 2 }}>
-                {list.length > 0 && (
-                    <TableContainer
-                        component={Paper}
-                        sx={{
-                            mt: 3,
-                            borderRadius: 3,
-                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-                        }}
-                    >
-                        <Table>
-
-                            {/* HEADER */}
                             <TableHead>
-                                <TableRow sx={{ backgroundColor: "#F9FAFB" }}>
-                                    <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                                <TableRow sx={{ background: "#F3F4F6" }}>
+                                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 700 }}>Amount</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                                 </TableRow>
                             </TableHead>
 
-                            {/* BODY */}
                             <TableBody>
-                                {list.map((t) => (
-                                    <TableRow
-                                        key={t.transactionId}
-                                        sx={{
-                                            "&:hover": {
-                                                backgroundColor: "#F9FAFB"
-                                            }
-                                        }}
-                                    >
-                                        {/* TYPE */}
-                                        <TableCell sx={{ fontWeight: 600 }}>
-                                            {t.type}
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} align="center">
+                                            <CircularProgress />
                                         </TableCell>
+                                    </TableRow>
+                                ) : (filtered.length ? filtered : list).map((t) => (
+                                    <TableRow key={t.transactionId} hover>
 
-                                        {/* DESCRIPTION */}
                                         <TableCell>
-                                            {t.description || "—"}
+                                            {t.type === "CREDIT"
+                                                ? <ArrowDownwardIcon sx={{ color: "#059669" }} />
+                                                : <ArrowUpwardIcon sx={{ color: "#DC2626" }} />}
                                         </TableCell>
 
-                                        {/* DATE */}
-                                        <TableCell sx={{ color: "#6B7280" }}>
-                                            {t.date} • {t.time}
+                                        <TableCell>{t.description}</TableCell>
+                                        <TableCell>{t.date}</TableCell>
+
+                                        <TableCell align="right" sx={{ fontWeight: 700 }}>
+                                            ₹{t.amount}
                                         </TableCell>
 
-                                        {/* AMOUNT */}
-                                        <TableCell
-                                            sx={{
-                                                fontWeight: 700,
-                                                color:
-                                                    t.type === "DEBIT"
-                                                        ? "#EF4444"
-                                                        : "#10B981"
-                                            }}
-                                        >
-                                            {t.type === "DEBIT" ? "-" : "+"} ₹{t.amount}
-                                        </TableCell>
-
-                                        {/* STATUS */}
                                         <TableCell>
-                                            <Box
+                                            <Chip
+                                                label={t.status}
+                                                size="small"
                                                 sx={{
-                                                    display: "inline-block",
-                                                    px: 2,
-                                                    py: 0.5,
-                                                    borderRadius: "20px",
-                                                    fontSize: 12,
-                                                    fontWeight: 600,
-                                                    backgroundColor:
-                                                        t.status === "SUCCESS"
-                                                            ? "#ECFDF5"
-                                                            : t.status === "FAILED"
-                                                                ? "#FEF2F2"
-                                                                : "#FFF7ED",
-                                                    color: getStatusColor(t.status)
+                                                    background: getStatusStyle(t.status).bg,
+                                                    color: getStatusStyle(t.status).color,
+                                                    fontWeight: 600
                                                 }}
-                                            >
-                                                {t.status}
-                                            </Box>
+                                            />
                                         </TableCell>
+
                                     </TableRow>
                                 ))}
                             </TableBody>
 
                         </Table>
-                        <TablePagination
-                            component="div"
-                            count={(page + 1) * rowsPerPage + (hasMore ? rowsPerPage : 0)}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            rowsPerPage={rowsPerPage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                            rowsPerPageOptions={[5]}
-                            sx={{
-                                borderTop: "1px solid #E5E7EB",
-                                mt: 2
-                            }}
-                        />
                     </TableContainer>
-                )}
-            </Grid>
 
-            {/*/!* PAGINATION *!/*/}
-            {/*{hasMore && (*/}
-            {/*    <Button*/}
-            {/*        fullWidth*/}
-            {/*        sx={{ mt: 3 }}*/}
-            {/*        variant="outlined"*/}
-            {/*        onClick={() => fetchHistory(page + 1)}*/}
-            {/*    >*/}
-            {/*        Load More*/}
-            {/*    </Button>*/}
-            {/*)}*/}
+                    <TablePagination
+                        component="div"
+                        count={(page + 1) * rowsPerPage + (hasMore ? rowsPerPage : 0)}
+                        page={page}
+                        onPageChange={(e, newPage) => fetchHistory(newPage)}
+                        rowsPerPage={rowsPerPage}
+                        rowsPerPageOptions={[5]}
+                    />
+                </Paper>
 
-        </Box>
+            </Box>
+
+            {/* POPUP */}
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 4,
+                        p: 3,
+                        minWidth: 360,
+                        textAlign: "center"
+                    }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 800, fontSize: 22 }}>
+                    {snackbar.severity === "success" ? "✅ Success" : "❌ Error"}
+                </DialogTitle>
+
+                <DialogContent>
+                    <Typography fontSize={16}>
+                        {snackbar.message}
+                    </Typography>
+                </DialogContent>
+
+                <DialogActions sx={{ justifyContent: "center", mt: 2 }}>
+                    <Button
+                        onClick={() => setOpenDialog(false)}
+                        variant="contained"
+                        sx={{ px: 4 }}
+                    >
+                        OK
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 };
 
