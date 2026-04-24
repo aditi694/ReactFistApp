@@ -87,9 +87,8 @@ const HistoryPage = () => {
         if (!accountNumber) return;
 
         setLoading(true);
-        setMessage("");
 
-        const res = await getTransactions(accountNumber, pageNumber + 1);
+        const res = await getTransactions(accountNumber, pageNumber + 1, 5);
 
         setLoading(false);
 
@@ -149,7 +148,7 @@ const HistoryPage = () => {
         setFiltered(temp);
     }, [typeFilter, list]);
 
-    // 📊 SUMMARY
+    // SUMMARY
     const summary = useMemo(() => {
         let credit = 0, debit = 0;
 
@@ -172,7 +171,7 @@ const HistoryPage = () => {
         <>
             <Box
                 sx={{
-                    width: "100%",                 // ✅ full width
+                    width: "100%",
                     minHeight: "100vh",
                     background: "#F9FAFB",
                     p: 4
@@ -187,34 +186,6 @@ const HistoryPage = () => {
                 <Typography fontSize={16} color="text.secondary" mb={4}>
                     Monitor and manage your financial activity
                 </Typography>
-
-                {/* SUMMARY */}
-                <Grid container spacing={3} mb={4}>
-                    {[
-                        { label: "Credits", value: summary.credit, color: "#059669" },
-                        { label: "Debits", value: summary.debit, color: "#DC2626" },
-                        { label: "Transactions", value: summary.total, color: "#4F46E5" }
-                    ].map((c, i) => (
-                        <Grid item xs={12} md={4} key={i}>
-                            <Box
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 4,
-                                    background: "#fff",
-                                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
-                                }}
-                            >
-                                <Typography fontSize={14} color="text.secondary">
-                                    {c.label}
-                                </Typography>
-
-                                <Typography fontSize={22} fontWeight={800} sx={{ color: c.color }}>
-                                    ₹{c.value}
-                                </Typography>
-                            </Box>
-                        </Grid>
-                    ))}
-                </Grid>
 
                 {/* FILTER BAR */}
                 <Box
@@ -364,14 +335,40 @@ const HistoryPage = () => {
                         </Table>
                     </TableContainer>
 
-                    <TablePagination
-                        component="div"
-                        count={(page + 1) * rowsPerPage + (hasMore ? rowsPerPage : 0)}
-                        page={page}
-                        onPageChange={(e, newPage) => fetchHistory(newPage)}
-                        rowsPerPage={rowsPerPage}
-                        rowsPerPageOptions={[5]}
-                    />
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            px: 2,
+                            py: 1.5,
+                            borderTop: "1px solid #E5E7EB"
+                        }}
+                    >
+                        <Typography fontSize={13}>
+                            Page {page + 1} • Showing {list.length} records
+                        </Typography>
+
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                disabled={page === 0}
+                                onClick={() => fetchHistory(page - 1)}
+                            >
+                                Prev
+                            </Button>
+
+                            <Button
+                                size="small"
+                                variant="contained"
+                                disabled={!hasMore}
+                                onClick={() => fetchHistory(page + 1)}
+                            >
+                                Next
+                            </Button>
+                        </Box>
+                    </Box>
                 </Paper>
 
             </Box>

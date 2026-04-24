@@ -23,10 +23,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import CustomerLayout from "./layouts/CustomerLayout";
 import AdminLayout from "./layouts/AdminLayout";
-
+import { Toaster } from "react-hot-toast";
 function App() {
     return (
         <BrowserRouter>
+            <Toaster position="top-right" reverseOrder={false} />
             <Routes>
 
                 {/* 🔹 PUBLIC ROUTES */}

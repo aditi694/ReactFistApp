@@ -15,9 +15,9 @@ export const transfer = (data) =>
         description: data.description,
     });
 
-export const getTransactions = (accountNumber) =>
+export const getTransactions = (accountNumber, page = 1, limit = 5) =>
     apiRequest(
-        `/api/customer/transactions?account_number=${accountNumber}&page=1&limit=20`
+        `/api/customer/transactions?account_number=${accountNumber}&page=${page}&limit=${limit}`
     );
 
 export const getTransactionStatus = (txnId) =>
@@ -26,7 +26,7 @@ export const getTransactionStatus = (txnId) =>
 export const sendPdfToEmail = async (accountNumber, from, to) => {
     const token = localStorage.getItem("token");
     const res = await fetch(
-        `http://192.168.1.23:8080/api/customer/transactions/pdf/email?account_number=${accountNumber}&from=${from}&to=${to}`,
+        `http://localhost:8080/api/customer/transactions/pdf/email?account_number=${accountNumber}&from=${from}&to=${to}`,
         {
             method: "GET",
             headers: {
