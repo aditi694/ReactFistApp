@@ -62,22 +62,33 @@ const AdminPending = () => {
         setLoading(false);
     };
 
-    const getUser = (id) => customers.find(c => c.customerId === id) || {};
+    const customerMap = Object.fromEntries(
+        customers.map(c => [c.customerId, c])
+    );
 
+    const getUser = (id) => customerMap[id] || {};
     const handleAction = async (fn, id, successMsg) => {
         setActionLoading(id);
         setMessage("");
 
-        const res = await fn(id);
-        if (res?.error) {
+        try {
+            const res = await fn(id);
+
+            if (res?.error) {
+                setError(true);
+                setMessage(res.message || "Action failed");
+            } else {
+                setError(false);
+                setMessage(successMsg);
+                fetchAll();
+            }
+        } catch (err) {
+            console.error(err);
             setError(true);
-            setMessage(res.message || "Action failed");
-        } else {
-            setError(false);
-            setMessage(successMsg);
-            fetchAll();
+            setMessage("Something went wrong");
+        } finally {
+            setActionLoading(null);
         }
-        setActionLoading(null);
     };
 
     if (loading) {
@@ -137,6 +148,7 @@ const AdminPending = () => {
                                         >
                                             APPROVE
                                         </Button>
+
                                         <Button
                                             fullWidth
                                             variant="contained"
@@ -160,8 +172,9 @@ const AdminPending = () => {
                 <SectionHeader title="Loan Requests" icon={AccountBalance} count={loans.length} />
                 <Grid container spacing={3}>
                     {loans.map((l) => {
-                        const user = getUser(l.customerId || l.account?.customerId);
-                        return (
+                        const user = getUser(
+                            l.customerId || l.account?.customerId || ""
+                        ); return (
                             <Grid item xs={12} sm={6} md={5} key={l.loanId}>
                                 <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
                                     <CardContent>
@@ -180,11 +193,24 @@ const AdminPending = () => {
                                     </CardContent>
 
                                     <CardActions sx={{ px: 2, pb: 2, gap: 1.5 }}>
-                                        <Button fullWidth variant="contained" color="success" onClick={() => handleAction(approveLoan, l.loanId, "Loan Approved")}>
-                                            APPROVE
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="success"
+                                            onClick={() => handleAction(approveLoan, l.loanId, "Loan Approved")}
+                                            disabled={actionLoading === l.loanId}
+                                        >
+                                            {actionLoading === l.loanId ? "Processing..." : "APPROVE"}
                                         </Button>
-                                        <Button fullWidth variant="contained" color="error" onClick={() => handleAction(rejectLoan, l.loanId, "Loan Rejected")}>
-                                            REJECT
+
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="error"
+                                            onClick={() => handleAction(rejectLoan, l.loanId, "Loan Rejected")}
+                                            disabled={actionLoading === l.loanId}
+                                        >
+                                            {actionLoading === l.loanId ? "Processing..." : "REJECT"}
                                         </Button>
                                     </CardActions>
                                 </Card>
@@ -220,11 +246,24 @@ const AdminPending = () => {
                                     </CardContent>
 
                                     <CardActions sx={{ px: 2, pb: 2, gap: 1.5 }}>
-                                        <Button fullWidth variant="contained" color="success" onClick={() => handleAction(approveBeneficiary, b.beneficiaryId, "Beneficiary Approved")}>
-                                            APPROVE
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="success"
+                                            onClick={() => handleAction(approveBeneficiary, b.beneficiaryId, "Beneficiary Approved")}
+                                            disabled={actionLoading === b.beneficiaryId}
+                                        >
+                                            {actionLoading === b.beneficiaryId ? "Processing..." : "APPROVE"}
                                         </Button>
-                                        <Button fullWidth variant="contained" color="error" onClick={() => handleAction(rejectBeneficiary, b.beneficiaryId, "Beneficiary Rejected")}>
-                                            REJECT
+
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="error"
+                                            onClick={() => handleAction(rejectBeneficiary, b.beneficiaryId, "Beneficiary Rejected")}
+                                            disabled={actionLoading === b.beneficiaryId}
+                                        >
+                                            {actionLoading === b.beneficiaryId ? "Processing..." : "REJECT"}
                                         </Button>
                                     </CardActions>
                                 </Card>

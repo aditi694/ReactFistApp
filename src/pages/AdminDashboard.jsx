@@ -28,11 +28,11 @@ import { useTheme, useMediaQuery } from "@mui/material";
 const AdminDashboard = () => {
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
-    const [loans, setLoans] = useState([]);
-    const [cards, setCards] = useState([]);
+    const [loanMap, setLoanMap] = useState({});
+    const [cardMap, setCardMap] = useState({});
     const [expanded, setExpanded] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
-
+    const [actionLoading, setActionLoading] = useState(null);
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
     const navigate = useNavigate();
@@ -49,18 +49,33 @@ const AdminDashboard = () => {
         ]);
 
         const cust = custRes?.data || [];
+        const loanList = loanRes?.data?.loans || [];
+        const cardList = cardRes?.data?.requests || [];
+
+        const loanMap = Object.fromEntries(
+            loanList.map(l => [l.customerId, l])
+        );
+
+        const cardMap = Object.fromEntries(
+            cardList.map(c => [c.customerId, c])
+        );
+
         setCustomers(cust);
         setFilteredCustomers(cust);
-        setLoans(loanRes?.data?.loans || []);
-        setCards(cardRes?.data?.requests || []);
+        setLoanMap(loanMap);
+        setCardMap(cardMap);
     };
 
     useEffect(() => {
-        const filtered = customers.filter(c =>
-            c.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredCustomers(filtered);
+        const timeout = setTimeout(() => {
+            const filtered = customers.filter(c =>
+                c.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                c.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredCustomers(filtered);
+        }, 300);
+
+        return () => clearTimeout(timeout);
     }, [searchTerm, customers]);
 
     const toggleExpand = (id) => {
@@ -68,19 +83,52 @@ const AdminDashboard = () => {
     };
 
     const getMeta = (c) => ({
-        loan: loans.find(l => l.customerId === c.customerId),
-        card: cards.find(cd => cd.customerId === c.customerId)
+        loan: loanMap[c.customerId],
+        card: cardMap[c.customerId]
     });
-
+    const safeCall = async (fn, ...args) => {
+        try {
+            await fn(...args);
+            fetchAll();
+        } catch (err) {
+            console.error(err);
+            alert("Action failed");
+        }
+    };
     // Handlers
-    const handleUpdateKyc = async (id, status) => { await updateKyc(id, status); fetchAll(); };
-    const handleBlock = async (id) => { await blockCustomer(id, "Blocked by admin"); fetchAll(); };
-    const handleUnblock = async (id) => { await unblockCustomer(id); fetchAll(); };
-    const handleApproveLoan = async (loanId) => { await approveLoan(loanId); fetchAll(); };
-    const handleRejectLoan = async (loanId) => { await rejectLoan(loanId); fetchAll(); };
-    const handleApproveCard = async (id) => { await approveCard(id); fetchAll(); };
-    const handleRejectCard = async (id) => { await rejectCard(id); fetchAll(); };
+    const handleUpdateKyc = (id, status) =>
+        safeCall(updateKyc, id, status);
+    const handleBlock = (id) => safeCall(blockCustomer, id, "Blocked by admin");
+    const handleUnblock = (id) =>
+        safeCall(unblockCustomer, id);
+    const handleApproveLoan = async (loanId) => {
+        setActionLoading(loanId);
 
+        try {
+            await approveLoan(loanId);
+
+            setLoanMap(prev => {
+                const updated = { ...prev };
+
+                const key = Object.keys(updated).find(
+                    k => updated[k]?.loanId === loanId
+                );
+
+                if (key) delete updated[key];
+
+                return updated;
+            });
+
+        } finally {
+            setActionLoading(null);
+        }
+    };
+    const handleRejectLoan = (loanId) =>
+        safeCall(rejectLoan, loanId);
+    const handleApproveCard = (id) =>
+        safeCall(approveCard, id);
+    const handleRejectCard = (id) =>
+        safeCall(rejectCard, id);
     return (
         <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, px: { xs: 2, sm: 3 } }}>
 
@@ -99,6 +147,11 @@ const AdminDashboard = () => {
                     )
                 }}
             />
+            {filteredCustomers.length === 0 && (
+                <Typography textAlign="center" mt={5}>
+                    No customers found
+                </Typography>
+            )}
 
             {isSmallScreen ? (
                 /* ==================== CARD VIEW (Mobile + Tablet) ==================== */
@@ -143,7 +196,7 @@ const AdminDashboard = () => {
                                     <Divider />
                                     <Box sx={{ p: 3, bgcolor: "#F8FAFC" }}>
                                         <Grid container spacing={2}>
-                                            <Grid item xs={12}>
+                                            <Grid size={12}>
                                                 <Typography fontSize={13} color="gray">Created At</Typography>
                                                 <Typography fontWeight={500}>
                                                     {new Date(c.createdAt).toLocaleDateString("en-IN")}
@@ -207,7 +260,7 @@ const AdminDashboard = () => {
                                 const meta = getMeta(c);
 
                                 return (
-                                    <>
+                                    <React.Fragment key={c.customerId}>
                                         <TableRow
                                             hover
                                             key={c.customerId}
@@ -283,9 +336,10 @@ const AdminDashboard = () => {
                                                                     <Button
                                                                         variant="contained"
                                                                         color="success"
+                                                                        disabled={actionLoading === meta.loan.loanId}
                                                                         onClick={() => handleApproveLoan(meta.loan.loanId)}
                                                                     >
-                                                                        Approve Loan
+                                                                        {actionLoading === meta.loan.loanId ? "Processing..." : "Approve Loan"}
                                                                     </Button>
                                                                     <Button
                                                                         variant="contained"
@@ -345,7 +399,7 @@ const AdminDashboard = () => {
                                                 </Collapse>
                                             </TableCell>
                                         </TableRow>
-                                    </>
+                                    </React.Fragment>
                                 );
                             })}
                         </TableBody>

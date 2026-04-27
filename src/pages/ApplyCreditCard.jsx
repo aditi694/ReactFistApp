@@ -11,41 +11,117 @@ import {
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import SecurityIcon from "@mui/icons-material/Security";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { applyCreditCard } from "../api/accountApi";
+import { applyCreditCard, getCreditCardStatus } from "../api/accountApi";
 
 const ApplyCreditCard = () => {
     const [name, setName] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState(false);
+    const [cardStatus, setCardStatus] = useState(null);
+    const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchStatus();
+    }, []);
+
+    // ✅ FIX 1: Proper error handling
+    const fetchStatus = async () => {
+        try {
+            const res = await getCreditCardStatus();
+            if (!res?.error) {
+                setCardStatus(res.data);
+            }
+        } catch (e) {
+            console.error("Failed to fetch card status", e);
+        }
+    };
+
+    // ✅ FIX 2: Strong name validation
+    const isValidName = (name) => {
+        return /^[A-Za-z]+ [A-Za-z]+/.test(name.trim());
+    };
 
     const handleApply = async () => {
         setMessage("");
         setError(false);
 
-        if (!name || name.trim().length < 5) {
-            setMessage("Enter full name (min 5 characters)");
+        if (!isValidName(name)) {
+            setMessage("Enter valid full name (first & last name)");
             setError(true);
             return;
         }
 
-        const res = await applyCreditCard({
-            cardHolderName: name.trim()
-        });
+        try {
+            setLoading(true);
 
-        if (res?.error) {
-            setMessage(res.message);
-            setError(true);
-            return;
-        }
+            const res = await applyCreditCard({
+                cardHolderName: name.trim()
+            });
 
-        setMessage("Application submitted");
-        setTimeout(() => {
+            // ✅ FIX 3: Handle API error safely
+            if (res?.error) {
+                setMessage(res.message || "Something went wrong");
+                setError(true);
+                return;
+            }
+
+            const status = res?.data?.status;
+
+            // ✅ FIX 4: Correct backend status handling
+            if (status === "APPROVED") {
+                setMessage("🎉 Your credit card is approved instantly!");
+            } else if (status === "PENDING_APPROVAL") {
+                setMessage("⏳ Your application is under review.");
+            } else if (status === "REJECTED") {
+                setMessage("❌ Application rejected");
+                setError(true);
+            } else {
+                setMessage("Application submitted successfully");
+            }
+
+            // refresh status
+            await fetchStatus();
+
+            // ✅ FIX 5: No unnecessary delay
             navigate("/customer-dashboard", { state: { refresh: true } });
-        }, 1500);
+
+        } catch (e) {
+            console.error(e);
+            setMessage("Something went wrong. Please try again.");
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    // ✅ STATUS BLOCK UI
+    if (cardStatus?.status === "ACTIVE") {
+        return (
+            <Box p={5}>
+                <Card sx={{ p: 3 }}>
+                    <Typography color="success.main" fontWeight={600}>
+                        ✅ You already have an active credit card
+                    </Typography>
+                </Card>
+            </Box>
+        );
+    }
+
+    if (cardStatus?.status === "PENDING_APPROVAL") {
+        return (
+            <Box p={5}>
+                <Card sx={{ p: 3 }}>
+                    <Typography color="warning.main" fontWeight={600}>
+                        ⏳ Your application is under review
+                    </Typography>
+                </Card>
+            </Box>
+        );
+    }
 
     return (
         <Box
@@ -58,6 +134,7 @@ const ApplyCreditCard = () => {
             }}
         >
             <Grid container spacing={6} alignItems="center">
+
                 {/* LEFT SIDE */}
                 <Grid item xs={12} md={7}>
                     <Fade in timeout={800}>
@@ -70,22 +147,13 @@ const ApplyCreditCard = () => {
                                 Apply for your premium credit card
                             </Typography>
 
-                            <Typography
-                                sx={{ mt: 2, color: "text.secondary", maxWidth: 500 }}
-                            >
-                                Enjoy seamless payments, cashback rewards, airport lounge access,
-                                and complete financial flexibility.
+                            <Typography sx={{ mt: 2, color: "text.secondary", maxWidth: 500 }}>
+                                Enjoy cashback, rewards, and secure payments.
                             </Typography>
                         </Box>
                     </Fade>
 
-                    {/* TRUST STATS */}
-                    <Stack
-                        direction="row"
-                        spacing={4}
-                        mt={4}
-                        flexWrap="wrap"
-                    >
+                    <Stack direction="row" spacing={4} mt={4} flexWrap="wrap">
                         {[
                             { label: "1M+ Users", sub: "Trusted customers" },
                             { label: "99.9% Secure", sub: "Bank-level security" },
@@ -100,37 +168,25 @@ const ApplyCreditCard = () => {
                         ))}
                     </Stack>
 
-                    {/* CARD VISUAL */}
-                    <Box sx={{ mt: 6, position: "relative", height: 220 }}>
+                    {/* CARD PREVIEW */}
+                    <Box sx={{ mt: 6 }}>
                         <Box
                             sx={{
-                                width: { xs: 280, md: 340 },
+                                width: 320,
                                 height: 200,
                                 borderRadius: 4,
                                 p: 3,
-                                background:
-                                    "linear-gradient(135deg, #2563eb, #1e40af)",
-                                color: "#fff",
-                                boxShadow: "0 15px 40px rgba(0,0,0,0.15)",
-                                transition: "0.3s",
-                                "&:hover": {
-                                    transform: "translateY(-6px)"
-                                }
+                                background: "linear-gradient(135deg, #2563eb, #1e40af)",
+                                color: "#fff"
                             }}
                         >
-                            <Typography fontSize={12} opacity={0.8}>
-                                CARD NUMBER
-                            </Typography>
-                            <Typography mt={1} letterSpacing={2}>
-                                **** **** **** 1234
-                            </Typography>
+                            <Typography fontSize={12}>CARD NUMBER</Typography>
+                            <Typography mt={1}>**** **** **** 1234</Typography>
 
                             <Box mt={4}>
-                                <Typography fontSize={12} opacity={0.8}>
-                                    CARD HOLDER
-                                </Typography>
+                                <Typography fontSize={12}>CARD HOLDER</Typography>
                                 <Typography fontWeight={600}>
-                                    {name || "Your Name"}
+                                    {name.toUpperCase() || "YOUR NAME"}
                                 </Typography>
                             </Box>
                         </Box>
@@ -144,18 +200,7 @@ const ApplyCreditCard = () => {
                             { icon: <SecurityIcon />, text: "Secure Payments" }
                         ].map((item, i) => (
                             <Grid item xs={12} sm={4} key={i}>
-                                <Card
-                                    sx={{
-                                        p: 2,
-                                        borderRadius: 3,
-                                        textAlign: "center",
-                                        boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
-                                        transition: "0.3s",
-                                        "&:hover": {
-                                            transform: "translateY(-5px)"
-                                        }
-                                    }}
-                                >
+                                <Card sx={{ p: 2, textAlign: "center" }}>
                                     <Box mb={1}>{item.icon}</Box>
                                     <Typography fontSize={14}>{item.text}</Typography>
                                 </Card>
@@ -167,68 +212,39 @@ const ApplyCreditCard = () => {
                 {/* RIGHT FORM */}
                 <Grid item xs={12} md={5}>
                     <Fade in timeout={1200}>
-                        <Card
-                            sx={{
-                                p: { xs: 3, md: 4 },
-                                borderRadius: 4,
-                                boxShadow: "0 10px 40px rgba(0,0,0,0.08)"
-                            }}
-                        >
+                        <Card sx={{ p: 4, borderRadius: 4 }}>
                             <Typography variant="h5" fontWeight={700}>
                                 Start your application
                             </Typography>
 
-                            <Typography
-                                fontSize={13}
-                                color="text.secondary"
-                                mb={3}
-                            >
-                                Takes less than 2 minutes
-                            </Typography>
-
                             <TextField
                                 fullWidth
-                                label="Full Name (as per PAN)"
+                                label="Full Name (as per account)"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                sx={{ mt: 3 }}
                             />
 
                             <Button
                                 fullWidth
                                 variant="contained"
                                 onClick={handleApply}
-                                sx={{
-                                    mt: 3,
-                                    py: 1.3,
-                                    fontWeight: 700,
-                                    borderRadius: 3,
-                                    boxShadow: "none"
-                                }}
+                                disabled={loading}
+                                sx={{ mt: 3 }}
                             >
-                                Apply Now
+                                {loading ? "Processing..." : "Apply Now"}
                             </Button>
 
                             {message && (
                                 <Typography
                                     sx={{
                                         mt: 2,
-                                        color: error
-                                            ? "error.main"
-                                            : "success.main",
-                                        fontWeight: 600
+                                        color: error ? "error.main" : "success.main"
                                     }}
                                 >
                                     {message}
                                 </Typography>
                             )}
-
-                            <Typography
-                                fontSize={12}
-                                color="text.secondary"
-                                mt={2}
-                            >
-                                By applying, you agree to our terms & conditions.
-                            </Typography>
                         </Card>
                     </Fade>
                 </Grid>

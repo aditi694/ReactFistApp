@@ -11,8 +11,18 @@ export const changePassword = (data) =>
 export const applyCreditCard = (data) =>
     apiRequest("/api/account/credit-cards/apply", "POST", data);
 
-export const getCreditCardStatus = () =>
-    apiRequest("/api/account/credit-cards/status");
+export const getCreditCardStatus = async () => {
+    const res = await apiRequest("/api/account/credit-cards/status");
+
+    if (!res || res.error) {
+        return { error: true, message: res?.message };
+    }
+
+    return {
+        error: false,
+        data: res
+    };
+};
 
 // ================= DEBIT CARD =================
 export const getDebitCard = () =>
