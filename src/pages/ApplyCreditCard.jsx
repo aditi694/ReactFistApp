@@ -13,7 +13,7 @@ import SecurityIcon from "@mui/icons-material/Security";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { applyCreditCard } from "../api/customerApi";
+import { applyCreditCard } from "../api/accountApi";
 
 const ApplyCreditCard = () => {
     const [name, setName] = useState("");

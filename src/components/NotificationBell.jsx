@@ -21,7 +21,7 @@ import {
 import {
     getNotifications,
     markNotificationRead,
-} from "../api/notificationApi";
+} from "../api/customerApi.js";
 
 const NotificationBell = () => {
     const dispatch = useDispatch();

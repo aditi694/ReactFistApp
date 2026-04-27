@@ -25,7 +25,7 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown, Receipt, CalendarMonth, BarChart as BarIcon } from "@mui/icons-material";
 
-import { getAnalytics } from "../api/analyticsApi";
+import { getAnalytics } from "../api/transactionApi";
 import { getUserFromToken, getAccountNumberFromAPI } from "../utils/auth";
 
 const COLORS = ["#2563EB", "#7C3AED", "#10B981", "#F59E0B", "#EF4444", "#0891B2"];
@@ -127,7 +127,7 @@ const AnalyticsPage = () => {
         0
     );
     return (
-        <Box sx={{  mx: "auto", p: 3, minHeight: "100vh" }}>
+        <Box sx={{ mx: "auto", p: 3, minHeight: "100vh" }}>
             {/* Header */}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4, flexWrap: "wrap", gap: 2 }}>
                 <Box>

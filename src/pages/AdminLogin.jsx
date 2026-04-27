@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminLogin } from "../api/authApi";
+import { adminLogin } from "../api/adminApi";
 import { setToken } from "../utils/auth";
 
 import {

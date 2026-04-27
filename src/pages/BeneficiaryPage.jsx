@@ -12,7 +12,7 @@ import {
 import {
     addBeneficiary,
     getBeneficiaries
-} from "../api/beneficiaryApi";
+} from "../api/customerApi";
 
 import { getUserFromToken, getAccountNumberFromAPI } from "../utils/auth";
 
@@ -296,13 +296,12 @@ const BeneficiaryPage = () => {
                             key={b.beneficiaryId}
                             sx={{
                                 mb: 2,
-                                borderLeft: `4px solid ${
-                                    b.verificationStatus === "VERIFIED"
+                                borderLeft: `4px solid ${b.verificationStatus === "VERIFIED"
                                         ? "#4caf50"
                                         : b.verificationStatus === "PENDING"
                                             ? "#ff9800"
                                             : "#f44336"
-                                }`
+                                    }`
                             }}
                         >
                             <CardContent>

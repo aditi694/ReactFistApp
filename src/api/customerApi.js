@@ -1,19 +1,34 @@
+
 import { apiRequest } from "./apiClient";
 
+// ================= AUTH =================
+export const customerLogin = (accountNumber, password) =>
+    apiRequest("/api/account/login", "POST", { accountNumber, password });
+
+export const registerCustomer = (data) =>
+    apiRequest("/api/public/register", "POST", data);
+
+// ================= DASHBOARD =================
 export const getCustomerDashboard = () =>
     apiRequest("/api/account/dashboard");
 
+// ================= NOMINEE =================
 export const getNominee = (customerId) =>
     apiRequest(`/customers/${customerId}/nominee`);
 
-export const applyCreditCard = (data) =>
-    apiRequest("/api/account/credit-cards/apply", "POST", data);
+// ================= BENEFICIARY =================
+export const addBeneficiary = (data) =>
+    apiRequest("/api/beneficiaries", "POST", data);
 
-export const applyLoan = (data) =>
-    apiRequest("/api/account/loans/request", "POST", data);
+export const getBeneficiaries = () =>
+    apiRequest("/api/beneficiaries");
 
-export const applyInsurance = (data) =>
-    apiRequest("/api/account/insurance/request", "POST", data);
+// ================= NOTIFICATIONS =================
+export const getNotifications = () =>
+    apiRequest("/api/customer/notifications");
 
-export const getMyInsurances = () =>
-    apiRequest("/api/account/insurance");
+export const markNotificationRead = (id) =>
+    apiRequest("/api/customer/notifications/read", "PATCH", {
+        notificationId: id,
+    });
+

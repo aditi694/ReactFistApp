@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { applyLoan } from "../api/customerApi";
+import { applyLoan } from "../api/accountApi";
 
 const loanTypes = ["PERSONAL", "HOME", "CAR", "EDUCATION", "BUSINESS"];
 
@@ -249,8 +249,8 @@ const ApplyLoan = () => {
                                     <svg width="100%" height="100%" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
                                         <circle cx="110" cy="110" r="90" stroke="#eee" strokeWidth="20" fill="none" />
                                         <circle cx="110" cy="110" r="90" stroke="#97144D" strokeWidth="20" fill="none"
-                                                strokeDasharray={`${(amount / total) * 565} 565`}
-                                                transform="rotate(-90 110 110)" />
+                                            strokeDasharray={`${(amount / total) * 565} 565`}
+                                            transform="rotate(-90 110 110)" />
                                     </svg>
                                 </Box>
                             </Box>

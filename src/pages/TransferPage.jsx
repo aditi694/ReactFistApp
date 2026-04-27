@@ -14,7 +14,7 @@ import {
     getTransactionStatus
 } from "../api/transactionApi";
 
-import { getBeneficiaries } from "../api/beneficiaryApi";
+import { getBeneficiaries } from "../api/customerApi";
 import {
     getUserFromToken,
     getAccountNumberFromAPI

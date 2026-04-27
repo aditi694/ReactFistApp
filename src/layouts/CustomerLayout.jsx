@@ -42,7 +42,6 @@ const CustomerLayout = () => {
         navigate("/customer-login");
     };
 
-    /* ✅ SIDEBAR REUSABLE */
     const Sidebar = () => (
         <>
             <Box sx={{

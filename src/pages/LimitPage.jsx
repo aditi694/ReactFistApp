@@ -11,7 +11,7 @@ import {
     Paper
 } from "@mui/material";
 
-import { getLimits } from "../api/limitApi";
+import { getLimits } from "../api/accountApi";
 import { getAccountNumber } from "../utils/accountHelper";
 
 const LimitPage = () => {

@@ -13,14 +13,8 @@ import {
 import {
     getPendingLoans, approveLoan, rejectLoan,
     getPendingCards, approveCard, rejectCard,
-    getAllCustomers
+    getAllCustomers, getPendingBeneficiaries, approveBeneficiary, rejectBeneficiary
 } from "../api/adminApi";
-
-import {
-    getPendingBeneficiaries,
-    approveBeneficiary,
-    rejectBeneficiary
-} from "../api/beneficiaryApi";
 
 const SectionHeader = ({ title, icon: Icon, count }) => (
     <Box sx={{

@@ -21,7 +21,7 @@ import FlightIcon from "@mui/icons-material/Flight";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 
-import { applyInsurance, getMyInsurances } from "../api/customerApi";
+import { applyInsurance, getMyInsurances } from "../api/accountApi";
 import { getUserFromToken } from "../utils/auth";
 
 //  Insurance Types
@@ -104,7 +104,7 @@ const InsurancePage = () => {
             sx={{
                 p: 4,
                 minHeight: "100vh"
-        }}
+            }}
         >
             {/* HEADER */}
             <Typography variant="h4" fontWeight="bold" mb={1}>

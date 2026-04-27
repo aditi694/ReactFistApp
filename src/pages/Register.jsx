@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import BasicInfo from "../components/BasicInfo";
 import DetailedInfo from "../components/DetailedInfo";
 import { useNavigate } from "react-router-dom";
-import { registerCustomer } from "../api/authApi";
+import { registerCustomer } from "../api/customerApi";
 
 import {
     step1Schema,

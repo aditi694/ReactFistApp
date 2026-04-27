@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { customerLogin, adminLogin } from "../api/authApi";
+import { customerLogin } from "../api/customerApi";
+import { adminLogin } from "../api/adminApi";
 import { setToken, getUserFromToken } from "../utils/auth";
 
 // ─── Customer Login ──────────────────────────────────────────────
@@ -52,18 +53,18 @@ export const adminLoginThunk = createAsyncThunk(
 const authSlice = createSlice({
     name: "auth",
     initialState: {
-        user:            getUserFromToken(),
-        loading:         false,
-        error:           null,
+        user: getUserFromToken(),
+        loading: false,
+        error: null,
         isAuthenticated: !!localStorage.getItem("token"),
     },
     reducers: {
         logout: (state) => {
             localStorage.clear();
             sessionStorage.clear();
-            state.user            = null;
+            state.user = null;
             state.isAuthenticated = false;
-            state.error           = null;
+            state.error = null;
         },
     },
     extraReducers: (builder) => {
@@ -71,34 +72,34 @@ const authSlice = createSlice({
         builder
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
-                state.error   = null;
+                state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
-                state.loading         = false;
-                state.user            = action.payload;
+                state.loading = false;
+                state.user = action.payload;
                 state.isAuthenticated = true;
-                state.error           = null;
+                state.error = null;
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error   = action.payload || "Login failed";
+                state.error = action.payload || "Login failed";
             });
 
         // ── adminLoginThunk ──────────────────────────────────────
         builder
             .addCase(adminLoginThunk.pending, (state) => {
                 state.loading = true;
-                state.error   = null;
+                state.error = null;
             })
             .addCase(adminLoginThunk.fulfilled, (state, action) => {
-                state.loading         = false;
-                state.user            = action.payload;
+                state.loading = false;
+                state.user = action.payload;
                 state.isAuthenticated = true;
-                state.error           = null;
+                state.error = null;
             })
             .addCase(adminLoginThunk.rejected, (state, action) => {
                 state.loading = false;
-                state.error   = action.payload || "Login failed";
+                state.error = action.payload || "Login failed";
             });
     },
 });

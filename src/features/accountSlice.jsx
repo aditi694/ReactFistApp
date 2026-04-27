@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getCustomerDashboard } from "../api/customerApi";
-import { getAnalytics } from "../api/analyticsApi";
+import { getAnalytics } from "../api/transactionApi";
 import { getTransactions } from "../api/transactionApi";
 
 export const fetchDashboard = createAsyncThunk(
