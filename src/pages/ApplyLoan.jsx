@@ -11,6 +11,9 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { applyLoan } from "../api/accountApi";
+import { useEffect } from "react";
+import { getMyLoans } from "../api/accountApi";
+import { Chip, CircularProgress } from "@mui/material";
 
 const loanTypes = ["PERSONAL", "HOME", "CAR", "EDUCATION", "BUSINESS"];
 
@@ -19,7 +22,8 @@ const ApplyLoan = () => {
     const [interest, setInterest] = useState(11);
     const [tenure, setTenure] = useState(12);
     const [loanType, setLoanType] = useState("PERSONAL");
-
+    const [loans, setLoans] = useState([]);
+    const [loadingLoans, setLoadingLoans] = useState(true);
     const navigate = useNavigate();
 
     const calculateEMI = () => {
@@ -32,15 +36,42 @@ const ApplyLoan = () => {
     const emi = calculateEMI();
     const total = emi * tenure;
     const interestPay = total - amount;
+    useEffect(() => {
+        fetchLoans();
+    }, []);
 
+    const fetchLoans = async () => {
+        setLoadingLoans(true);
+        const res = await getMyLoans();
+
+        if (!res.error) {
+            setLoans(res.data || []);
+        }
+
+        setLoadingLoans(false);
+    };
     const handleApply = async () => {
         const res = await applyLoan({ loanType, amount });
-        if (!res?.error) navigate("/customer-dashboard");
+
+        if (res.error) {
+            alert(res.message);
+            return;
+        }
+
+        alert(res.data.message);
+
+        if (res.data.status === "ACTIVE") {
+            alert("🎉 Loan approved instantly!");
+        } else {
+            alert("⏳ Loan request submitted for approval");
+        }
+
+        fetchLoans();
     };
 
     return (
         <Box sx={{
-            // maxWidth: 1280,
+            maxWidth: 1280,
             mx: "auto",
             p: { xs: 2, sm: 3, md: 4, lg: 5 },
             width: "100%"
@@ -79,8 +110,12 @@ const ApplyLoan = () => {
             </Box>
 
             {/* HERO SECTION*/}
-            <Grid container spacing={{ xs: 3, md: 6 }} alignItems="center">
-                <Grid item xs={12} md={6}>
+            <Grid
+                container
+                spacing={{ xs: 4, md: 8 }}
+                alignItems="center"
+            >
+                <Grid item xs={12} md={6} pr={{ md: 6 }}>
                     <Typography
                         fontSize={{ xs: 28, sm: 32, md: 36, lg: 40 }}
                         fontWeight={800}
@@ -111,15 +146,33 @@ const ApplyLoan = () => {
                 </Grid>
 
                 {/* Apply Now Card */}
-                <Grid item xs={12} md={6}>
+                <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    display="flex"
+                    justifyContent={{ xs: "center", md: "flex-end" }}
+                    pl={{ md: 6 }}   // 👈 IMPORTANT
+                >
                     <Paper
                         sx={{
+                            width: "100%",
+                            maxWidth: 420,
+                            ml: { md: 4 },
                             p: { xs: 3, md: 4 },
-                            borderRadius: 3,
-                            boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+                            borderRadius: 4,
+                            boxShadow: "0 12px 35px rgba(0,0,0,0.08)",
+                            transition: "0.3s",
+                            "&:hover": {
+                                transform: "translateY(-4px)"
+                            }
                         }}
                     >
-                        <Typography fontWeight={700} fontSize={{ xs: 18, md: 20 }} mb={3}>
+                        <Typography
+                            fontWeight={700}
+                            fontSize={{ xs: 18, md: 20 }}
+                            mb={3}
+                        >
                             Apply Now
                         </Typography>
 
@@ -129,7 +182,6 @@ const ApplyLoan = () => {
                             value={loanType}
                             onChange={(e) => setLoanType(e.target.value)}
                             sx={{ mb: 2 }}
-                            size="medium"
                         >
                             {loanTypes.map((t) => (
                                 <MenuItem key={t} value={t}>{t}</MenuItem>
@@ -142,7 +194,6 @@ const ApplyLoan = () => {
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(Number(e.target.value))}
-                            size="medium"
                         />
 
                         <Button
@@ -150,10 +201,11 @@ const ApplyLoan = () => {
                             variant="contained"
                             sx={{
                                 mt: 4,
-                                py: 1.8,
+                                py: 1.6,
+                                borderRadius: 2,
                                 bgcolor: "#97144D",
-                                fontSize: { xs: "1rem", md: "1.1rem" },
                                 fontWeight: 600,
+                                letterSpacing: 0.5,
                                 "&:hover": { bgcolor: "#7a1039" }
                             }}
                             onClick={handleApply}
@@ -317,6 +369,122 @@ const ApplyLoan = () => {
                         </Grid>
                     </Grid>
                 </Paper>
+            </Box>
+            {/* ================= MY LOANS ================= */}
+            <Box mt={{ xs: 8, md: 10 }} maxWidth={1000} mx="auto">
+                <Typography
+                    fontSize={{ xs: 26, md: 32 }}
+                    fontWeight={800}
+                    mb={3}
+                >
+                    My Loans
+                </Typography>
+
+                {loadingLoans && <CircularProgress />}
+
+                {!loadingLoans && loans.length === 0 && (
+                    <Box textAlign="center" py={6}>
+                        <Typography fontSize={16} fontWeight={600}>
+                            No loans yet
+                        </Typography>
+                        <Typography color="gray" fontSize={14}>
+                            Apply for a loan to see details here
+                        </Typography>
+                    </Box>)}
+
+                {!loadingLoans &&
+                    loans.map((loan) => (
+                        <Paper
+                            key={loan.loanId}
+                            sx={{
+                                p: { xs: 2.5, md: 3.5 },
+                                mb: 3,
+                                borderRadius: 4,
+                                boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+                                transition: "0.3s",
+                                "&:hover": {
+                                    transform: "translateY(-3px)",
+                                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)"
+                                }
+                            }}
+                        >
+                            {/* HEADER */}
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                mb={1}
+                            >
+                                <Typography fontWeight={700} fontSize={{ xs: 15, md: 17 }}>
+                                    {loan.loanType} Loan
+                                </Typography>
+
+                                <Chip
+                                    label={loan.status}
+                                    size="small"
+                                    sx={{
+                                        fontWeight: 600,
+                                        bgcolor:
+                                            loan.status === "ACTIVE"
+                                                ? "#E6F4EA"
+                                                : loan.status === "REQUESTED"
+                                                    ? "#FFF4E5"
+                                                    : "#FDECEA",
+                                        color:
+                                            loan.status === "ACTIVE"
+                                                ? "#2E7D32"
+                                                : loan.status === "REQUESTED"
+                                                    ? "#ED6C02"
+                                                    : "#D32F2F"
+                                    }}
+                                />
+                            </Box>
+
+                            <Typography fontSize={12} color="gray">
+                                Loan ID: {loan.loanId}
+                            </Typography>
+
+                            {/* DATA GRID */}
+                            <Grid container spacing={2} mt={1}>
+                                <Grid item xs={6} md={3}>
+                                    <Typography fontSize={12} color="gray">Amount</Typography>
+                                    <Typography fontWeight={600}>₹{loan.loanAmount}</Typography>
+                                </Grid>
+
+                                {loan.status === "ACTIVE" && (
+                                    <>
+                                        <Grid item xs={6} md={3}>
+                                            <Typography fontSize={12} color="gray">EMI</Typography>
+                                            <Typography fontWeight={600}>₹{loan.emiAmount}</Typography>
+                                        </Grid>
+
+                                        <Grid item xs={6} md={3}>
+                                            <Typography fontSize={12} color="gray">Interest</Typography>
+                                            <Typography fontWeight={600}>{loan.interestRate}%</Typography>
+                                        </Grid>
+
+                                        <Grid item xs={6} md={3}>
+                                            <Typography fontSize={12} color="gray">Outstanding</Typography>
+                                            <Typography fontWeight={600}>₹{loan.outstandingAmount}</Typography>
+                                        </Grid>
+                                    </>
+                                )}
+                            </Grid>
+
+                            {/* STATUS MESSAGE */}
+                            {loan.status === "REQUESTED" && (
+                                <Typography mt={2} fontSize={13} color="#ED6C02">
+                                    ⏳ Awaiting admin approval
+                                </Typography>
+                            )}
+
+                            {loan.status === "REJECTED" && (
+                                <Typography mt={2} fontSize={13} color="#D32F2F">
+                                    ❌ Loan rejected
+                                </Typography>
+                            )}
+                        </Paper>
+                    ))}
             </Box>
         </Box>
     );
