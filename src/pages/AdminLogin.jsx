@@ -17,7 +17,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 const AdminLogin = () => {
     const [form, setForm] = useState({ username: "", password: "" });
     const [error, setError] = useState("");
-    const [showPassword, setShowPassword] = useState(false); // ✅ NEW
+    const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
 

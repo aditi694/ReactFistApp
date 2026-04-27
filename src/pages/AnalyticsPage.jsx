@@ -230,7 +230,7 @@ const AnalyticsPage = () => {
                                     Category Spending
                                 </Typography>
 
-                                {/* 🔥 Insight */}
+                                {/*Insight */}
                                 <Typography sx={{ fontSize: 13, color: "#6B7280", mb: 2 }}>
                                     {categories[0] && (
                                         <>
@@ -307,8 +307,7 @@ const AnalyticsPage = () => {
                             </CardContent>
                         </Card>
 
-                        {/*
-                        Donut Chart */}
+                        {/* Donut Chart */}
                         <Card sx={{ borderRadius: 3, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
@@ -350,7 +349,7 @@ const AnalyticsPage = () => {
                                             </PieChart>
                                         </ResponsiveContainer>
 
-                                        {/* 🔥 CENTER TOTAL */}
+                                        {/*CENTER TOTAL */}
                                         <Box
                                             sx={{
                                                 position: "absolute",

@@ -46,7 +46,7 @@ const ApplyLoan = () => {
             width: "100%"
         }}>
 
-            {/* 🔹 LOAN TYPE TABS - EXACTLY as in your screenshot */}
+            {/* LOAN TYPE*/}
             <Box
                 sx={{
                     display: "flex",
@@ -78,7 +78,7 @@ const ApplyLoan = () => {
                 ))}
             </Box>
 
-            {/* HERO SECTION - Matches your laptop screenshot perfectly */}
+            {/* HERO SECTION*/}
             <Grid container spacing={{ xs: 3, md: 6 }} alignItems="center">
                 <Grid item xs={12} md={6}>
                     <Typography
@@ -110,7 +110,7 @@ const ApplyLoan = () => {
                     </Box>
                 </Grid>
 
-                {/* Apply Now Card - Exact look from screenshot */}
+                {/* Apply Now Card */}
                 <Grid item xs={12} md={6}>
                     <Paper
                         sx={{
@@ -164,7 +164,7 @@ const ApplyLoan = () => {
                 </Grid>
             </Grid>
 
-            {/* EMI CALCULATOR + WHY UNION BANK - Already responsive as before */}
+            {/* EMI CALCULATOR + WHY UNION BANK */}
             <Box mt={{ xs: 7, md: 10 }} sx={{ px: { xs: 1, md: 2 } }}>
                 <Typography
                     fontSize={{ xs: 24, sm: 28, md: 32 }}

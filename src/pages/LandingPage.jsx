@@ -71,7 +71,7 @@ const LandingPage = () => {
                         </Stack>
                     </Grid>
 
-                    {/* RIGHT IMAGE (SMALLER FIXED) */}
+                    {/* RIGHT IMAGE*/}
                     <Grid item xs={12} md={6}>
                         <Box
                             component="img"

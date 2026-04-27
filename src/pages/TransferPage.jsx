@@ -367,7 +367,7 @@ const TransferPage = () => {
                 </Box>
             </Dialog>
 
-            {/* SNACKBAR (for errors only) */}
+            {/* SNACKBAR */}
             <Snackbar
                 open={!!message}
                 autoHideDuration={3000}

@@ -68,7 +68,6 @@ const LimitPage = () => {
                 px: { xs: 2, md: 4 },
                 py: 4,
                 minHeight: "100vh"
-                // background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
             }}
         >
             {/* CENTER CONTAINER */}

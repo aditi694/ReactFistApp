@@ -4,12 +4,12 @@ export const getAccountNumber = async () => {
 
     const user = getUserFromToken();
 
-    // ✅ FIRST: try token
+    // FIRST: try token
     if (user?.accountNumber) {
         return user.accountNumber;
     }
 
-    // ✅ SECOND: fallback API
+    // SECOND: fallback API
     const acc = await getAccountNumberFromAPI(user);
 
     return acc || null;

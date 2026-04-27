@@ -24,6 +24,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerLayout from "./layouts/CustomerLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import { Toaster } from "react-hot-toast";
+import CustomerDetail from "./pages/CustomerDetail";
 function App() {
     return (
         <BrowserRouter>
@@ -66,6 +67,7 @@ function App() {
                 >
                     <Route path="/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/pending" element={<AdminPending />} />
+                    <Route path="/admin/customer/:id" element={<CustomerDetail />} />
                 </Route>
 
             </Routes>
