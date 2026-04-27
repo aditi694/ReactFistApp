@@ -22,7 +22,7 @@ import {
     Search, KeyboardArrowDown, KeyboardArrowUp,
     CheckCircle, Block
 } from "@mui/icons-material";
-
+import { useNavigate } from "react-router-dom";
 import { useTheme, useMediaQuery } from "@mui/material";
 
 const AdminDashboard = () => {
@@ -34,7 +34,8 @@ const AdminDashboard = () => {
     const [searchTerm, setSearchTerm] = useState("");
 
     const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));   // Changed to lg for better transition
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchAll();
@@ -106,8 +107,11 @@ const AdminDashboard = () => {
                         const isOpen = expanded[c.customerId];
 
                         return (
-                            <Card key={c.customerId} sx={{ borderRadius: 3, boxShadow: 3 }}>
-                                <CardContent>
+                            <Card
+                                key={c.customerId}
+                                sx={{ borderRadius: 3, boxShadow: 3, cursor: "pointer" }}
+                                onClick={() => navigate(`/admin/customer/${c.customerId}`)}
+                            >                                <CardContent>
                                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                                             <Avatar sx={{ bgcolor: "#2563EB" }}>
@@ -118,7 +122,12 @@ const AdminDashboard = () => {
                                                 <Typography variant="body2" color="text.secondary">{c.email}</Typography>
                                             </Box>
                                         </Box>
-                                        <IconButton onClick={() => toggleExpand(c.customerId)}>
+                                        <IconButton
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleExpand(c.customerId);
+                                            }}
+                                        >
                                             {isOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                                         </IconButton>
                                     </Box>
@@ -141,7 +150,7 @@ const AdminDashboard = () => {
                                                 </Typography>
                                             </Grid>
 
-                                            {/* Action Buttons - Full Width on small screens */}
+                                            {/* Action Buttons  */}
                                             <Grid item xs={12} sx={{ mt: 1 }}>
                                                 <Grid container spacing={1.5}>
                                                     {c.kycStatus === "PENDING" && (
@@ -158,7 +167,6 @@ const AdminDashboard = () => {
                                                             </Grid>
                                                         </>
                                                     )}
-                                                    {/* Similar for Loan and Card - you can keep adding */}
                                                     <Grid item xs={12}>
                                                         {c.status === "ACTIVE" ? (
                                                             <Button fullWidth variant="outlined" color="warning" startIcon={<Block />} onClick={() => handleBlock(c.customerId)}>
@@ -184,7 +192,7 @@ const AdminDashboard = () => {
                 <TableContainer component={Paper} sx={{ borderRadius: 3, overflowX: "auto" }}>
                     <Table sx={{ minWidth: 950 }}>
                         <TableHead>
-                            <TableRow>
+                            <TableRow onClick={(e) => e.stopPropagation()}>
                                 <TableCell sx={{ width: 60 }} />
                                 <TableCell>Name</TableCell>
                                 <TableCell>Email</TableCell>
@@ -200,9 +208,19 @@ const AdminDashboard = () => {
 
                                 return (
                                     <>
-                                        <TableRow hover key={c.customerId}>
+                                        <TableRow
+                                            hover
+                                            key={c.customerId}
+                                            sx={{ cursor: "pointer" }}
+                                            onClick={() => navigate(`/admin/customer/${c.customerId}`)}
+                                        >
                                             <TableCell>
-                                                <IconButton onClick={() => toggleExpand(c.customerId)}>
+                                                <IconButton
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleExpand(c.customerId);
+                                                    }}
+                                                >
                                                     {isOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                                                 </IconButton>
                                             </TableCell>
@@ -222,7 +240,7 @@ const AdminDashboard = () => {
                                             </TableCell>
                                         </TableRow>
 
-                                        <TableRow>
+                                        <TableRow onClick={(e) => e.stopPropagation()}>
                                             <TableCell colSpan={6} sx={{ p: 0 }}>
                                                 <Collapse in={isOpen}>
                                                     <Box sx={{ p: 3, bgcolor: "#F8FAFC" }}>
@@ -243,7 +261,7 @@ const AdminDashboard = () => {
                                                                     <Button
                                                                         variant="contained"
                                                                         color="success"
-                                                                        startIcon={<CheckCircle/>}
+                                                                        startIcon={<CheckCircle />}
                                                                         onClick={() => handleUpdateKyc(c.customerId, "APPROVED")}
                                                                     >
                                                                         Approve KYC
@@ -251,7 +269,7 @@ const AdminDashboard = () => {
                                                                     <Button
                                                                         variant="contained"
                                                                         color="error"
-                                                                        sx={{ml: 1}}
+                                                                        sx={{ ml: 1 }}
                                                                         onClick={() => handleUpdateKyc(c.customerId, "REJECTED")}
                                                                     >
                                                                         Reject KYC
@@ -272,7 +290,7 @@ const AdminDashboard = () => {
                                                                     <Button
                                                                         variant="contained"
                                                                         color="error"
-                                                                        sx={{ml: 1}}
+                                                                        sx={{ ml: 1 }}
                                                                         onClick={() => handleRejectLoan(meta.loan.loanId)}
                                                                     >
                                                                         Reject Loan
@@ -293,7 +311,7 @@ const AdminDashboard = () => {
                                                                     <Button
                                                                         variant="contained"
                                                                         color="error"
-                                                                        sx={{ml: 1}}
+                                                                        sx={{ ml: 1 }}
                                                                         onClick={() => handleRejectCard(meta.card.id)}
                                                                     >
                                                                         Reject Card
@@ -307,7 +325,7 @@ const AdminDashboard = () => {
                                                                     <Button
                                                                         variant="outlined"
                                                                         color="warning"
-                                                                        startIcon={<Block/>}
+                                                                        startIcon={<Block />}
                                                                         onClick={() => handleBlock(c.customerId)}
                                                                     >
                                                                         Block Customer
