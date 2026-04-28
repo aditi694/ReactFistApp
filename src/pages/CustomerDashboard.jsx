@@ -261,18 +261,18 @@ const CustomerDashboard = () => {
                 <Box sx={{
                     flex: 1,
                     overflowY: "auto",
-                    p: { xs: 2, md: 3 },
+                    p: { xs: 1.5, sm: 2, md: 3, lg: 4 },
                     bgcolor: "#F8FAFC",
                     "&::-webkit-scrollbar": { display: "none" },
                     scrollbarWidth: "none"
                 }}>
                     <Box sx={{
                         display: "grid",
-                        gridTemplateColumns: { xs: "1fr", lg: "2fr 1fr" },
-                        gap: 3,
-                        maxWidth: "1440px",
+                        gridTemplateColumns: { xs: "1fr", md: "1fr", lg: "2.2fr 1fr" },
+                        gap: { xs: 2, md: 3 },
+                        maxWidth: "1600px",
                         mx: "auto",
-                        // pl: {md: 0.5}   // Tight left alignment
+                        width: "100%",
                     }}>
 
                         {/* ════ LEFT COLUMN ════════════════════════════════ */}
@@ -302,7 +302,7 @@ const CustomerDashboard = () => {
                                         <Box
                                             sx={{
                                                 flex: 1,
-                                                p: { xs: 2, md: 3.5 },
+                                                p: { xs: 2, sm: 2.5, md: 3, lg: 3 },
                                                 borderRight: { md: "1px solid #F3F4F6" }
                                             }}
                                         >
@@ -345,7 +345,7 @@ const CustomerDashboard = () => {
                                             <Typography
                                                 sx={{
                                                     fontFamily: "monospace",
-                                                    fontSize: { xs: 26, md: 34, lg: 38 },
+                                                    fontSize: { xs: 24, sm: 28, md: 34, lg: 42 },
                                                     fontWeight: 800,
                                                     color: "#111827",
                                                     letterSpacing: -1
