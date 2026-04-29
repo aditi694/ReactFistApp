@@ -27,7 +27,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 import HomeIcon from "@mui/icons-material/Home";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { applyCreditCard, getCreditCardStatus } from "../api/accountApi";
 
@@ -628,7 +628,41 @@ const ApplyNewCard = () => {
         { icon: <HomeIcon sx={{ color: BRAND }} />, title: "Residential status", desc: "The individual should either be a resident of India or a non-resident Indian." },
         { icon: <DescriptionIcon sx={{ color: BRAND }} />, title: "Documents required", desc: "PAN card, Aadhaar card, Passport or Driver's license, income proof etc." },
     ];
+    const sliderRef = useRef(null);
 
+    const scrollToCard = (direction) => {
+        const container = sliderRef.current;
+        if (!container) return;
+
+        const cardWidth = container.children[0]?.offsetWidth || 300; // fallback
+        const gap = 24; // gap between cards (adjust according to your sx gap)
+
+        const scrollAmount = (cardWidth + gap) * (direction === 'next' ? 1 : -1);
+
+        container.scrollBy({
+            left: scrollAmount,
+            behavior: 'smooth'
+        });
+    };
+
+    // Optional: Auto-center clicked card (keep if you like it)
+    const handleCardClick = (index) => {
+        const container = sliderRef.current;
+        if (!container) return;
+
+        const card = container.children[index];
+        if (!card) return;
+
+        const containerWidth = container.offsetWidth;
+        const cardWidth = card.offsetWidth;
+
+        const scrollPosition = card.offsetLeft - (containerWidth / 2) + (cardWidth / 2);
+
+        container.scrollTo({
+            left: scrollPosition,
+            behavior: "smooth",
+        });
+    };
     return (
         <Box sx={{ background: "#fff" }}>
 
@@ -679,9 +713,39 @@ const ApplyNewCard = () => {
                 <SectionHeading>Apply for Credit Card online</SectionHeading>
 
                 {/* ✅ Card grid */}
-                <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
+                <Box
+                    ref={sliderRef}
+                    sx={{
+                        display: "flex",
+                        overflowX: "auto",
+                        gap: { xs: 2, sm: 3 },
+                        px: { xs: 2, sm: 4 },
+                        pb: 2,
+                        scrollSnapType: "x mandatory",
+                        scrollBehavior: "smooth",
+                        WebkitOverflowScrolling: "touch",
+                        "&::-webkit-scrollbar": { display: "none" },
+                        "& > *": {
+                            scrollSnapAlign: "center",
+                            flex: "0 0 auto",
+                        },
+                    }}
+                >
+
                     {cards.map((card, i) => (
-                        <Grid item xs={12} sm={6} md={4} key={i}>
+                        <Box
+                            key={i}
+                            onClick={() => handleCardClick(i)}
+                            sx={{
+                                width: {
+                                    xs: "85%",      // Better for mobile
+                                    sm: "48%",
+                                    md: "32%"
+                                },
+                                scrollSnapAlign: "center",
+                                cursor: "pointer",
+                            }}
+                        >
                             <Card sx={{ borderRadius: 3, border: "1px solid #eee", height: "100%", display: "flex", flexDirection: "column", transition: "all 0.25s ease", "&:hover": { boxShadow: { md: "0 12px 40px rgba(0,0,0,0.12)" }, transform: { md: "translateY(-4px)" } } }}>
 
                                 {card.best && (
@@ -738,9 +802,9 @@ const ApplyNewCard = () => {
                                     </Button>
                                 </Box>
                             </Card>
-                        </Grid>
+                        </Box>
                     ))}
-                </Grid>
+                </Box>
             </Box >
 
             {/* ── HOW TO APPLY ── */}
