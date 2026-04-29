@@ -1,18 +1,105 @@
-# React + Vite
+# 💳 ReactFirstApp
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based banking application that simulates real-world financial workflows including transactions, loans, and admin approvals.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Features
 
-## React Compiler
+* User & Admin Authentication
+* Money Transfer & Transaction History
+* Loan / Insurance / Credit Card Applications
+* Beneficiary Management
+* Admin Dashboard & Approvals
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+---
 
-Note: This will impact Vite dev & build performances.
+## 🧱 Tech Stack
 
-## Expanding the ESLint configuration
+* React (Vite)
+* Redux Toolkit
+* Axios
+* React Router
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🏗 High-Level Design (HLD)
+
+```plaintext
+Client (React UI)
+       ↓
+State Management (Redux)
+       ↓
+API Layer (Axios)
+       ↓
+Backend Services (Auth, Account, Transaction)
+```
+
+### Key Concepts
+
+* **Layered Architecture** for scalability
+* **Role-based access** (Admin vs Customer)
+* **Centralized state management** using Redux
+* **Reusable component system**
+
+---
+
+## 🧩 Low-Level Design (LLD)
+
+### Module Breakdown
+
+* **Auth** → Login, token handling, ProtectedRoute
+* **Account** → Balance, limits, account data
+* **Transaction** → Transfers, history, beneficiaries
+* **Customer** → Profile & dashboard
+* **Admin** → Approvals, analytics
+* **Notification** → Global alerts
+
+---
+
+### Data Flow
+
+```plaintext
+User Action → Dispatch Action → Redux Store Update
+           → API Call → Response → UI Re-render
+```
+
+---
+
+## 📁 Structure
+
+```plaintext
+src/
+├── api/
+├── features/
+├── components/
+├── pages/
+├── layouts/
+├── utils/
+├── validation/
+```
+
+---
+
+## ⚙️ Setup
+
+```bash
+git clone https://github.com/aditi694/ReactFistApp.git
+npm install
+npm run dev
+```
+
+---
+
+## 📌 Future Improvements
+
+* TypeScript migration
+* API caching (RTK Query)
+* Testing (Jest)
+* Improved error handling
+
+---
+
+## 👩‍💻 Author
+
+Aditi
