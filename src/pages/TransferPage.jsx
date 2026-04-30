@@ -143,7 +143,8 @@ const TransferPage = () => {
                 fromAccount: accountNumber,
                 toAccount: beneficiary.beneficiaryAccount,
                 amount: Number(amount),
-                description: desc
+                description: desc,
+                transferType: "UPI"
             });
 
             if (res.error) {

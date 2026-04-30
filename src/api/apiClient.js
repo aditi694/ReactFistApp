@@ -16,6 +16,7 @@ export const apiRequest = async (endpoint, method = "GET", body = null) => {
     try {
         const response = await fetch(BASE_URL + endpoint, {
             method,
+            credentials: "include",
             headers,
             body: body ? JSON.stringify(body) : null,
         });
@@ -23,13 +24,10 @@ export const apiRequest = async (endpoint, method = "GET", body = null) => {
         console.log(` ${method} ${endpoint} → Status: ${response.status}`);
 
         if (response.status === 401 || response.status === 403) {
-            console.log("401/403 - Clearing token and redirecting to login");
-            localStorage.removeItem("token");
-            sessionStorage.clear();
-            window.location.href = "/customer-login";
+            console.log("401/403 - Unauthorized (handled by route)");
             return {
                 error: true,
-                message: "Session expired. Please login again.",
+                message: "Unauthorized",
                 status: response.status,
                 data: null
             };
